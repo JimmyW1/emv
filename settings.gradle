@@ -1,0 +1,4 @@
+rootProject.name='OpenEMV'
+include ':app'
+include ':emvkernel'
+include ':communication'
