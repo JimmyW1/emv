@@ -1,4 +1,4 @@
-package com.vfi.android.emvkernel.tools.utils;
+package com.vfi.android.libtools.utils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -16,14 +16,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-
-/**
- * Created by laikey on 2016/12/11.
- */
-
 public class StringUtil {
-
     private static String TAG="Utils";
+
     public StringUtil() {
     }
 
@@ -165,7 +160,6 @@ public class StringUtil {
         return null;
     }
 
-    // fx 增加Utils.asc2BcdLeft()方法，用于ASC字符数量为奇数时数据左对齐。(asc2Bcd()是右对齐的)
     public static byte[] asc2BcdLeft(String asc, int length) {
         if (asc == null || asc.length() <= 0 || length <= 0 || length > asc.length()) {
             return null;
@@ -725,7 +719,6 @@ public class StringUtil {
         }
     }
 
-    //timeAccuracy精确度,时分秒最长6位，2位只取小时数，4位取时分，6位取时分秒
     public static String formatDateTime(String date, String datePattern, String time, int timeLength) {
         if (date == null || date.length() == 0) {
             return "";
@@ -798,7 +791,6 @@ public class StringUtil {
             InputStreamReader is = new InputStreamReader(proc.getInputStream());
             BufferedReader br = new BufferedReader(is);
 
-            //执行命令cmd，只取结果中含有filter的这一行
             while ((line = br.readLine()) != null && line.contains(filter) == false) {
             }
 
@@ -982,11 +974,6 @@ public class StringUtil {
         return str;
     }
 
-    /**
-     * 左侧补零
-     * length  返回字符串长度
-     * s的长度超过length,返回s;小于length，左侧不足补零
-     */
     public static String leftZeroShift(String s, int length) {
         if (s == null || s.length() > length)
             return s;
@@ -995,11 +982,6 @@ public class StringUtil {
         return str;
     }
 
-    /**
-     * 右侧补零
-     * length  返回字符串长度
-     * s的长度超过length,返回s;小于length，右侧不足补零
-     */
     public static String rightZeroShift(String s, int length) {
         if (s == null || s.length() > length)
             return s;
@@ -1016,13 +998,7 @@ public class StringUtil {
         }
     }
 
-    /**
-     * 验证日期是否合法
-     * @param dateStr 日期字符串(例如"20180508")
-     * @return 合法返回true, 不合法返回false
-     */
     public static boolean isDateLegal(String dateStr) {
-        // 如果日期不合法，则抛异常
         System.out.println("isDateLegal 验证日期合法性：" + dateStr);
 
         if (dateStr == null || dateStr.length() < 8)
@@ -1035,7 +1011,6 @@ public class StringUtil {
             Date date = format.parse(dateStr);
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("isDateLegal 日期不合法");
             return false;
         }
 

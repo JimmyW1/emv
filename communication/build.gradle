@@ -6,6 +6,10 @@ android {
     compileSdkVersion rootProject.ext.android.compileSdkVersion
     buildToolsVersion rootProject.ext.android.buildToolsVersion
 
+    compileOptions {
+        encoding "UTF-8"
+    }
+
     defaultConfig {
         minSdkVersion rootProject.ext.android.minSdkVersion
         targetSdkVersion rootProject.ext.android.targetSdkVersion
@@ -37,10 +41,15 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':libtools')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation rootProject.ext.dep.appcompat
     implementation rootProject.ext.dep.androidx_core
     testImplementation rootProject.ext.dep.junit
     androidTestImplementation rootProject.ext.dep.ext_junit
     androidTestImplementation rootProject.ext.dep.espresso
+    implementation rootProject.ext.dep.rxjava
+    implementation rootProject.ext.dep.dragger
+    annotationProcessor rootProject.ext.dep.dragger_compiler
 }

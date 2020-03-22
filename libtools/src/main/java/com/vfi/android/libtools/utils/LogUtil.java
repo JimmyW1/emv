@@ -1,15 +1,7 @@
-package com.vfi.android.emvkernel.tools.utils;
-
-
-/**
- * Created by laikey on 2017/10/13.
- */
+package com.vfi.android.libtools.utils;
 
 public class LogUtil {
     private static ILogEntry logEntry = new JavaLogEntry();
-    /**
-     * 控制变量，是否显示log日志
-     */
     public static boolean isShowLog = true;
     public static String defaultMsg = "";
     public static final int V = 1;
@@ -18,11 +10,10 @@ public class LogUtil {
     public static final int W = 4;
     public static final int E = 5;
 
-    //规定每段显示的长度
     private static int MAX_LENGTH_SINGLE_LINE = 2000;
 
     /**
-     * 初始化控制变量
+     * Enable/Disable print log
      *
      * @param isShowLog
      */
@@ -30,12 +21,6 @@ public class LogUtil {
         LogUtil.isShowLog = isShowLog;
     }
 
-    /**
-     * 初始化控制变量和默认日志
-     *
-     * @param isShowLog
-     * @param defaultMsg
-     */
     public static void init(boolean isShowLog, String defaultMsg) {
         LogUtil.isShowLog = isShowLog;
         LogUtil.defaultMsg = defaultMsg;
@@ -107,23 +92,7 @@ public class LogUtil {
         llog(E, tag, obj);
     }
 
-
-    /**
-     * 执行打印方法
-     *
-     * @param type
-     * @param tagStr
-     * @param obj
-     */
     public static void llog(int type, String tagStr, Object obj) {
-        // filter tag
-        if (tagStr != null) {
-//            switch (tagStr) {
-//                case TAGS.COMM:
-//                    return;
-//            }
-        }
-
         String msg;
         if (!isShowLog) {
             return;
@@ -223,15 +192,15 @@ public class LogUtil {
 
         int segmentSize = 3 * 1024;
         long length = msg.length();
-        if (length <= segmentSize) {// 长度小于等于限制直接打印
+        if (length <= segmentSize) {
             System.out.println(tag + " : " + msg);
         } else {
-            while (msg.length() > segmentSize) {// 循环分段打印日志
+            while (msg.length() > segmentSize) {
                 String logContent = msg.substring(0, segmentSize);
                 msg = msg.replace(logContent, "");
                 System.out.println(tag + " : " + logContent);
             }
-            System.out.println(tag + " : " + msg);// 打印剩余日志
+            System.out.println(tag + " : " + msg);
         }
     }
 }

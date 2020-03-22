@@ -1,12 +1,12 @@
 package com.vfi.android.emvkernel.data.beans;
 
 
-import com.vfi.android.emvkernel.data.consts.TAGS;
-import com.vfi.android.emvkernel.tools.utils.LogUtil;
-import com.vfi.android.emvkernel.tools.utils.StringUtil;
+import com.vfi.android.libtools.consts.TAGS;
+import com.vfi.android.libtools.utils.LogUtil;
+import com.vfi.android.libtools.utils.StringUtil;
 
 public class ApduResponse {
-    protected final String TAG = TAGS.COMM;
+    protected final String TAG = TAGS.EMV_COMM;
 
     private boolean isSuccess;
     /**
