@@ -83,6 +83,7 @@ public class ApduCmd {
         }
 
         LogUtil.d(TAG, "Cmd len=[" + cmdLen + "] data=[" + StringUtil.byte2HexStr(data) + "]");
+        LogUtil.d(TAG, "Cmd =[" + StringUtil.byte2HexStr(cmd) + "]");
         LogUtil.d(TAG, "=============cmd end============================");
         return cmd;
     }

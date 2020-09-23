@@ -247,7 +247,7 @@ public class StringUtil {
         return null;
     }
 
-    private String byte2HexStr(byte[] data, int offset, int len) {
+    public static String byte2HexStr(byte[] data, int offset, int len) {
         if (data == null || data.length <= 0 || offset < 0 || len <= 0 || offset > data.length || len > data.length - offset) {
             return null;
         }

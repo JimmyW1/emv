@@ -19,7 +19,7 @@ public class IPosServiceImpl implements IPosService {
     private IDeviceService handler;
 
     @Inject
-    IPosServiceImpl(Context context) {
+    public IPosServiceImpl(Context context) {
         this.context = context;
     }
 

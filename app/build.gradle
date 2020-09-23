@@ -33,6 +33,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':communication')
+    implementation project(':emvkernel')
+    implementation project(':libtools')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation rootProject.ext.dep.appcompat
     implementation rootProject.ext.dep.androidx_core
@@ -40,4 +42,5 @@ dependencies {
     testImplementation rootProject.ext.dep.junit
     androidTestImplementation rootProject.ext.dep.ext_junit
     androidTestImplementation rootProject.ext.dep.espresso
+    implementation rootProject.ext.dep.rxjava
 }
