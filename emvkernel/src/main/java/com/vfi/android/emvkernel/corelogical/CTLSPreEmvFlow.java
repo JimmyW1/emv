@@ -1,34 +1,27 @@
 package com.vfi.android.emvkernel.corelogical;
 
+import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
+import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
-import com.vfi.android.emvkernel.interfaces.IEMVHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
+import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
 
 import java.util.List;
 
-public class CtlsEmvFlow implements IEmvOperation {
-    private IEmvComm iEmvComm;
-    private EmvParams emvParams;
-    private IEMVHandler emvHandler;
-
-    /**
-     * @param iEmvComm
-     */
-    public CtlsEmvFlow(IEmvComm iEmvComm) {
-        this.iEmvComm = iEmvComm;
+public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
+    public CTLSPreEmvFlow(EmvContext emvContext) {
+        super(emvContext);
     }
 
     @Override
     public int initEmvFlow(EmvParams emvParams) {
-        this.emvParams = emvParams;
-
         return 0;
     }
 
     @Override
-    public void startEMVFlow(IEMVHandler emvHandler) {
-        this.emvHandler = emvHandler;
+    public void startEMVFlow(IEmvHandler emvHandler) {
+
     }
 
     @Override

@@ -8,7 +8,7 @@ import com.vfi.android.emvkernel.data.beans.OnlineInfo;
 
 import java.util.List;
 
-public interface IEMVHandler {
+public interface IEmvHandler {
     void onSelectApplication(List<AppInfo> appList);
     void onConfirmCardInfo(CardInfo info);
     void onRequestOnlinePIN();

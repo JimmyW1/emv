@@ -98,6 +98,29 @@ public class TLVUtil {
     }
 
     public static String toTlvStr(Map<String, String> tlvMap) {
-        return null;
+        StringBuffer stringBuffer = new StringBuffer();
+
+        for (String key : tlvMap.keySet()) {
+            String valueHex = tlvMap.get(key);
+
+            if (valueHex == null || valueHex.length() == 0) {
+                continue;
+            }
+
+            String lenHexStr;
+            if (valueHex.length() > 127 * 2) {
+                lenHexStr = String.format("%04X", valueHex.length());
+                byte[] byteValues = StringUtil.hexStr2Bytes(lenHexStr);
+                byteValues[0] |= 0x80;
+                lenHexStr = StringUtil.byte2HexStr(byteValues);
+            } else {
+                lenHexStr = String.format("%02X", valueHex.length());
+            }
+
+            LogUtil.d(TAG, "TAG[" + key + "]=" + (key + lenHexStr + valueHex));
+            stringBuffer.append(key + lenHexStr + valueHex);
+        }
+
+        return stringBuffer.toString();
     }
 }

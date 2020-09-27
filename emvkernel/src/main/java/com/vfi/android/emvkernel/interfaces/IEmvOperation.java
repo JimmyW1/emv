@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface IEmvOperation {
     int initEmvFlow(EmvParams emvParams);
-    void startEMVFlow(IEMVHandler emvHandler);
+    void startEMVFlow(IEmvHandler emvHandler);
     void stopEmvFlow();
     void setEmvTag(String tag, String value);
     String getEmvTag(String tag);

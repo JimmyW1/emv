@@ -5,6 +5,7 @@ import android.os.Bundle
 import com.vfi.android.communication.terminal.deviceservice.IPosServiceImpl
 import com.vfi.android.communication.terminal.interfaces.IPosService
 import com.vfi.android.emvkernel.corelogical.apdu.ApplicationSelectCmd
+import com.vfi.android.emvkernel.corelogical.apdu.ApplicationSelectResponse
 import com.vfi.android.libtools.utils.LogUtil
 import com.vfi.android.libtools.utils.StringUtil
 import com.vfi.android.libtools.utils.TLVUtil
@@ -27,6 +28,13 @@ class MainActivity : AppCompatActivity() {
         LogUtil.d(TAG, "TAG9F11=[" + map.get("9F11") + "]");
         LogUtil.d(TAG, "TAGBF0C=[" + map.get("BF0C") + "]");
 
+        var newMap:HashMap<String, String> = HashMap();
+        newMap.put("9F34", "01010102");
+        newMap.put("DF81", "01");
+        newMap.put("DF81", "010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910");
+        var tlvStr = TLVUtil.toTlvStr(newMap);
+        LogUtil.d(TAG, "Final Str=[" + tlvStr + "]");
+
 
         var iposService:IPosService = IPosServiceImpl(this)
         iposService.bind().doOnComplete {
@@ -35,6 +43,10 @@ class MainActivity : AppCompatActivity() {
             LogUtil.d(TAG, "isCardPresent=[$isCardPresent]");
             var response = iposService.executeAPDU(ApplicationSelectCmd(true, true, "1PAY.SYS.DDF01").apduCmd).blockingSingle();
             LogUtil.d(TAG, "response=[" + StringUtil.byte2HexStr(response) + "]");
+            var responseApdu = ApplicationSelectResponse(response);
+            LogUtil.d(TAG, "isSuccess" + responseApdu.isSuccess);
+            LogUtil.d(TAG, "isTerminate" + responseApdu.isNeedTerminate);
+            LogUtil.d(TAG, "tag84" + responseApdu.tag84);
         }.subscribe()
     }
 }
