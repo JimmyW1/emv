@@ -4,15 +4,15 @@ import com.vfi.android.emvkernel.corelogical.CTLSPreEmvFlow;
 import com.vfi.android.emvkernel.corelogical.ContactEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
-import com.vfi.android.emvkernel.database.DbManager;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
 
 import java.util.List;
 
-public final class EmvManager implements IEmvOperation {
+public final class EmvManager {
     private static IEmvOperation iEmvOperation;
+    private EmvContext emvContext;
 
     private static class SingletonHolder {
         private static final EmvManager INSTANCE = new EmvManager();
@@ -21,46 +21,65 @@ public final class EmvManager implements IEmvOperation {
     private EmvManager() {
     }
 
-    public static EmvManager getInstance(boolean isContact, IEmvComm iEmvComm) {
+    public static EmvManager getInstance(IEmvComm iEmvComm) {
+        EmvManager emvManager = SingletonHolder.INSTANCE;
+
         EmvContext emvContext = new EmvContext();
-        emvContext.setDbOperation(new DbManager());
+        emvContext.setDbOperation(SdkManager.getInstance().getDbManager());
         emvContext.setEmvComm(iEmvComm);
-        if (isContact) {
+
+        emvManager.setEmvContext(emvContext);
+        iEmvOperation = new ContactEmvFlow(emvContext); // default;
+        return emvManager;
+    }
+
+    public int initEmvFlow(EmvParams emvParams) {
+        if (emvParams.isContact()) {
             iEmvOperation = new ContactEmvFlow(emvContext);
         } else {
             iEmvOperation = new CTLSPreEmvFlow(emvContext);
         }
 
-        return SingletonHolder.INSTANCE;
-    }
-
-    @Override
-    public int initEmvFlow(EmvParams emvParams) {
         return iEmvOperation.initEmvFlow(emvParams);
     }
 
-    @Override
     public void startEMVFlow(IEmvHandler emvHandler) {
         iEmvOperation.startEMVFlow(emvHandler);
     }
 
-    @Override
     public void stopEmvFlow() {
         iEmvOperation.stopEmvFlow();
     }
 
-    @Override
     public void setEmvTag(String tag, String value) {
         iEmvOperation.setEmvTag(tag, value);
     }
 
-    @Override
     public String getEmvTag(String tag) {
         return iEmvOperation.getEmvTag(tag);
     }
 
-    @Override
     public String getEmvTags(List<String> tagList) {
         return iEmvOperation.getEmvTags(tagList);
+    }
+
+    public void saveEmvAppParameters(int groupId, String emvAppTagList) {
+
+    }
+
+    public List<String> getEmvAppParameters(int groupId) {
+        return null;
+    }
+
+    public void saveEmvCapkParameters(int groupId, String emvCapkList) {
+
+    }
+
+    public List<String> getEmvCapkParameters(int groupId) {
+        return null;
+    }
+
+    public void setEmvContext(EmvContext emvContext) {
+        this.emvContext = emvContext;
     }
 }
