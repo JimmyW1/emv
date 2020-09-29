@@ -6,6 +6,7 @@ import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 
 public class EmvContext {
+    private String eventType;
     private IEmvComm emvComm;
     private IEmvHandler emvHandler;
     private BaseEmvFlow baseEmvFlow;
@@ -53,5 +54,13 @@ public class EmvContext {
 
     public void setEmvParams(EmvParams emvParams) {
         this.emvParams = emvParams;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
     }
 }

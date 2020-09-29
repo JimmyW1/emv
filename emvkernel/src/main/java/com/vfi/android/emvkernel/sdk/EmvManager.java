@@ -13,6 +13,7 @@ import java.util.List;
 public final class EmvManager {
     private static IEmvOperation iEmvOperation;
     private EmvContext emvContext;
+    private Thread emvThread;
 
     private static class SingletonHolder {
         private static final EmvManager INSTANCE = new EmvManager();

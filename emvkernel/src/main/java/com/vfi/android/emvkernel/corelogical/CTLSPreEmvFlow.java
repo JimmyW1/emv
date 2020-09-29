@@ -15,6 +15,11 @@ public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
     }
 
     @Override
+    public void jumpToState(String stateType) {
+
+    }
+
+    @Override
     public int initEmvFlow(EmvParams emvParams) {
         return 0;
     }

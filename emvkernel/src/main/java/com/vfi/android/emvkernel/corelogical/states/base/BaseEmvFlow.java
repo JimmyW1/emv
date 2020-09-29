@@ -6,7 +6,7 @@ import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 
-public class BaseEmvFlow {
+public abstract class BaseEmvFlow {
     protected final String TAG = TAGS.EMV_COMM;
     private EmvContext emvContext;
     private IEmvState currentEmvState;
@@ -21,6 +21,15 @@ public class BaseEmvFlow {
         emvContext.setBaseEmvFlow(this);
         currentEmvState = new IdleState();
     }
+
+    protected void sendEvent(String eventType) {
+        emvContext.setEventType(eventType);
+        if (currentEmvState != null) {
+            currentEmvState.run(emvContext);
+        }
+    }
+
+    public abstract void jumpToState(String stateType);
 
     public EmvContext getEmvContext() {
         return emvContext;

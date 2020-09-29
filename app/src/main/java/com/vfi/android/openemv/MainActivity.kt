@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        TLVUtil.toTlvMap("9F340401010202");
+        TLVUtil.toTlvMap("B119459A72D408580706FF0103A4A8025735C6E20051000000800020092900000000000137076407643C000000000000000080A0000000250108010001440302");
 //        TLVUtil.toTlvMap("DF81190101");
         var map = TLVUtil.toTlvMap("6F19840E315041592E5359532E4444463031A5078801019F110101");
         LogUtil.d(TAG, "TAG6F=[" + map.get("6F") + "]");
@@ -53,6 +53,8 @@ class MainActivity : AppCompatActivity() {
         emvParams.isContact = true;
         emvManager.initEmvFlow(emvParams)
         var emvHandler = EmvHandler()
+        emvManager.startEMVFlow(emvHandler)
+        emvManager.initEmvFlow(emvParams)
         emvManager.startEMVFlow(emvHandler)
 
 //        var iposService:IPosService = IPosServiceImpl(this)
