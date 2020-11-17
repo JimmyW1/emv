@@ -1,5 +1,6 @@
 package com.vfi.android.emvkernel.corelogical;
 
+import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.data.beans.EmvParams;

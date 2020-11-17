@@ -24,38 +24,42 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        TLVUtil.toTlvMap("B119459A72D408580706FF0103A4A8025735C6E20051000000800020092900000000000137076407643C000000000000000080A0000000250108010001440302");
-//        TLVUtil.toTlvMap("DF81190101");
-        var map = TLVUtil.toTlvMap("6F19840E315041592E5359532E4444463031A5078801019F110101");
-        LogUtil.d(TAG, "TAG6F=[" + map.get("6F") + "]");
-        LogUtil.d(TAG, "TAG84=[" + map.get("84") + "]");
-        LogUtil.d(TAG, "TAGA5=[" + map.get("A5") + "]");
-        LogUtil.d(TAG, "TAG88=[" + map.get("88") + "]");
-        LogUtil.d(TAG, "TAG5F2D=[" + map.get("5F2D") + "]");
-        LogUtil.d(TAG, "TAG9F11=[" + map.get("9F11") + "]");
-        LogUtil.d(TAG, "TAGBF0C=[" + map.get("BF0C") + "]");
+//        TLVUtil.toTlvMap("B119459A72D408580706FF0103A4A8025735C6E20051000000800020092900000000000137076407643C000000000000000080A0000000250108010001440302l");
+////        TLVUtil.toTlvMap("DF81190101");
+//        var map = TLVUtil.toTlvMap("6F19840E315041592E5359532E4444463031A5078801019F110101");
+//        LogUtil.d(TAG, "TAG6F=[" + map.get("6F") + "]");
+//        LogUtil.d(TAG, "TAG84=[" + map.get("84") + "]");
+//        LogUtil.d(TAG, "TAGA5=[" + map.get("A5") + "]");
+//        LogUtil.d(TAG, "TAG88=[" + map.get("88") + "]");
+//        LogUtil.d(TAG, "TAG5F2D=[" + map.get("5F2D") + "]");
+//        LogUtil.d(TAG, "TAG9F11=[" + map.get("9F11") + "]");
+//        LogUtil.d(TAG, "TAGBF0C=[" + map.get("BF0C") + "]");
+//
+//        var newMap:HashMap<String, String> = HashMap();
+//        newMap.put("9F34", "01010102");
+//        newMap.put("DF81", "01");
+//        newMap.put("DF81", "010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910");
+//        var tlvStr = TLVUtil.toTlvStr(newMap);
+//        LogUtil.d(TAG, "Final Str=[" + tlvStr + "]");
 
-        var newMap:HashMap<String, String> = HashMap();
-        newMap.put("9F34", "01010102");
-        newMap.put("DF81", "01");
-        newMap.put("DF81", "010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910010203040506070809100102030405060708091001020304050607080910");
-        var tlvStr = TLVUtil.toTlvStr(newMap);
-        LogUtil.d(TAG, "Final Str=[" + tlvStr + "]");
+        var iPosService = IPosServiceImpl(this);
 
-        var sdkConfig = SDKConfig()
-        sdkConfig.dbRootPath = "/sdcard/emv_param"
-        sdkConfig.emvComm = EmvCommunication(this)
+        iPosService.bind().doOnComplete {
+            var sdkConfig = SDKConfig()
+            sdkConfig.dbRootPath = "/sdcard/emv_param"
+            sdkConfig.emvComm = EmvCommunication(iPosService)
 
-        var sdkManager = SdkManager.getInstance(sdkConfig)
-        var emvManager = sdkManager.emvManager
+            Thread.sleep(2000);
 
-        var emvParams = EmvParams()
-        emvParams.isContact = true;
-        emvManager.initEmvFlow(emvParams)
-        var emvHandler = EmvHandler()
-        emvManager.startEMVFlow(emvHandler)
-        emvManager.initEmvFlow(emvParams)
-        emvManager.startEMVFlow(emvHandler)
+            var sdkManager = SdkManager.getInstance(sdkConfig)
+            var emvManager = sdkManager.emvManager
+
+            var emvParams = EmvParams()
+            emvParams.isContact = true;
+            emvManager.initEmvFlow(emvParams)
+            var emvHandler = EmvHandler()
+            emvManager.startEMVFlow(emvHandler)
+        }.subscribe();
 
 //        var iposService:IPosService = IPosServiceImpl(this)
 //        iposService.bind().doOnComplete {

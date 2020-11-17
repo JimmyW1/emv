@@ -16,6 +16,9 @@ public class SW12 {
     public static String OPFAIL_MUTUAL_AUTH_NEEDED = "6803";
     public static String OPFAIL_STATUS_NOT_SATISFIED = "6804";
 
+    // self define
+    public static String ERR_NO_COMMUNICATION = "ERR_NO_COMMUNICATION";
+
     /**
      * 0x9000 OK. Command executed successfully
      * 0x6A86 Operation Failed. Incorrect Parameters P1 P2

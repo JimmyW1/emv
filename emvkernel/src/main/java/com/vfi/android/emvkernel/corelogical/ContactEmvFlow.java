@@ -1,8 +1,9 @@
 package com.vfi.android.emvkernel.corelogical;
 
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartEmv;
+import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
-import com.vfi.android.emvkernel.corelogical.states.base.EventType;
 import com.vfi.android.emvkernel.corelogical.states.base.IEmvState;
 import com.vfi.android.emvkernel.corelogical.states.common.IdleState;
 import com.vfi.android.emvkernel.corelogical.states.contact.SelectApplicationState;
@@ -26,7 +27,7 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
     public void jumpToState(String stateType) {
         IEmvState emvState = null;
 
-        LogUtil.d(TAG, "Current state=[" + getCurrentEmvState() + "] ---> State=[" + stateType + "]");
+        LogUtil.d(TAG, "Current state=[" + ((AbstractEmvState)getCurrentEmvState()).getStateType() + "] ---> State=[" + stateType + "]");
 
         switch (stateType) {
             case STATE_IDLE:
@@ -54,7 +55,7 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
     @Override
     public void startEMVFlow(IEmvHandler emvHandler) {
         setEmvHandler(emvHandler);
-        sendEvent(EventType.EV_START_EMV_FLOW);
+        sendMessage(new Msg_StartEmv());
     }
 
     @Override

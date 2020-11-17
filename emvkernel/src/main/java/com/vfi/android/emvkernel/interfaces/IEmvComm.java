@@ -6,6 +6,6 @@ import com.vfi.android.emvkernel.data.beans.ApduResponse;
 public interface IEmvComm {
     boolean powerOnCardReader();
     boolean isCardPresent();
-    ApduResponse executeApduCmd(ApduCmd apduCmd);
+    byte[] executeApduCmd(ApduCmd apduCmd);
     void  powerOffCardReader();
 }

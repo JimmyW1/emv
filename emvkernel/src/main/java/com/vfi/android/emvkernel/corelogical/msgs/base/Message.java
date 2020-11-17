@@ -6,4 +6,8 @@ public class Message {
     public Message(String messageType) {
         this.messageType = messageType;
     }
+
+    public String getMessageType() {
+        return messageType;
+    }
 }

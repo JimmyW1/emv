@@ -5,6 +5,9 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion rootProject.ext.android.compileSdkVersion
     buildToolsVersion rootProject.ext.android.buildToolsVersion
+    compileOptions {
+        encoding "UTF-8"
+    }
 
     defaultConfig {
         applicationId rootProject.ext.android.applicationId

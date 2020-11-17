@@ -21,4 +21,20 @@ public class EmvParams {
     public void setContact(boolean contact) {
         isContact = contact;
     }
+
+    public int getEmvParameterGroup() {
+        return emvParameterGroup;
+    }
+
+    public void setEmvParameterGroup(int emvParameterGroup) {
+        this.emvParameterGroup = emvParameterGroup;
+    }
+
+    public boolean isSupportPSE() {
+        return isSupportPSE;
+    }
+
+    public void setSupportPSE(boolean supportPSE) {
+        isSupportPSE = supportPSE;
+    }
 }

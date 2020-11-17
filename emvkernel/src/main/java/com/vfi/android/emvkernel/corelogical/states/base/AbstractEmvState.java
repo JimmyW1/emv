@@ -1,7 +1,8 @@
 package com.vfi.android.emvkernel.corelogical.states.base;
 
+import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.data.beans.ApduCmd;
 import com.vfi.android.libtools.consts.TAGS;
-import com.vfi.android.libtools.utils.LogUtil;
 
 public abstract class AbstractEmvState implements IEmvState {
     protected final String TAG = TAGS.EMV_STATE;
@@ -22,14 +23,22 @@ public abstract class AbstractEmvState implements IEmvState {
         return stateType;
     }
 
-    protected String getEventType() {
-        return emvContext.getEventType();
+    protected byte[] executeApduCmd(ApduCmd apduCmd) {
+        if (emvContext != null && emvContext.getEmvComm() != null) {
+            return emvContext.getEmvComm().executeApduCmd(apduCmd);
+        }
+
+        return null;
+    }
+
+    protected void sendMessage(Message message) {
+        if (emvContext != null && emvContext.getBaseEmvFlow() != null) {
+            emvContext.getBaseEmvFlow().sendMessage(message);
+        }
     }
 
     @Override
     public void run(EmvContext context) {
         this.emvContext = context;
-        LogUtil.d(TAG, "State[" + stateType + "] EventType=[" + context.getEventType() + "]");
-
     }
 }

@@ -1,17 +1,18 @@
 package com.vfi.android.emvkernel.corelogical.states.base;
 
+import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.database.IDbOperation;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 
 public class EmvContext {
-    private String eventType;
     private IEmvComm emvComm;
     private IEmvHandler emvHandler;
     private BaseEmvFlow baseEmvFlow;
     private IDbOperation dbOperation;
     private EmvParams emvParams;
+    private Message message;
 
     public EmvContext() {
     }
@@ -56,11 +57,11 @@ public class EmvContext {
         this.emvParams = emvParams;
     }
 
-    public String getEventType() {
-        return eventType;
+    public Message getMessage() {
+        return message;
     }
 
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
+    public void setMessage(Message message) {
+        this.message = message;
     }
 }

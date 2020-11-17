@@ -2,6 +2,7 @@ package com.vfi.android.communication.terminal.deviceservice;
 
 
 import com.vfi.android.libtools.utils.LogUtil;
+import com.vfi.android.libtools.utils.StringUtil;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -66,7 +67,10 @@ public class ICCardReaderObservable {
 
     public Observable<byte[]> exchangeApdu(byte[] data) {
         return Observable.create(emitter -> {
-            emitter.onNext(posService.getHandler().getInsertCardReader(CARDREADER_TYPE).exchangeApdu(data));
+            LogUtil.d(TAG, "exchangeApdu dataHex=[" + StringUtil.byte2HexStr(data) + "]");
+            byte[] responseData = posService.getHandler().getInsertCardReader(CARDREADER_TYPE).exchangeApdu(data);
+            LogUtil.d(TAG, "exchangeApdu response dataHex=[" + StringUtil.byte2HexStr(responseData) + "]");
+            emitter.onNext(responseData);
             emitter.onComplete();
         });
     }

@@ -1,5 +1,8 @@
 package com.vfi.android.emvkernel.corelogical.states.base;
 
+import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.corelogical.msgs.base.ToAppMessage;
+import com.vfi.android.emvkernel.corelogical.msgs.base.ToEmvMessage;
 import com.vfi.android.emvkernel.corelogical.states.common.IdleState;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
@@ -22,14 +25,30 @@ public abstract class BaseEmvFlow {
         currentEmvState = new IdleState();
     }
 
-    protected void sendEvent(String eventType) {
-        emvContext.setEventType(eventType);
-        if (currentEmvState != null) {
-            currentEmvState.run(emvContext);
+    public abstract void jumpToState(String stateType);
+
+    public void runCurrentState(Message message) {
+        if (message == null) {
+            return;
+        }
+
+        LogUtil.d(TAG, "runCurrentState messageType=" + message.getMessageType());
+
+        if (message instanceof ToEmvMessage) {
+            if (currentEmvState != null) {
+                emvContext.setMessage(message);
+                currentEmvState.run(emvContext);
+            }
+        } else if (message instanceof ToAppMessage) {
+
+        } else {
+
         }
     }
 
-    public abstract void jumpToState(String stateType);
+    public void sendMessage(Message message) {
+        runCurrentState(message);
+    }
 
     public EmvContext getEmvContext() {
         return emvContext;
