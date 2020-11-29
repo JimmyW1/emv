@@ -9,6 +9,8 @@ import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 
+import java.util.List;
+
 public abstract class BaseEmvFlow {
     protected final String TAG = TAGS.EMV_COMM;
     private EmvContext emvContext;
@@ -74,5 +76,41 @@ public abstract class BaseEmvFlow {
 
     public void setEmvParams(EmvParams emvParams) {
         emvContext.setEmvParams(emvParams);
+    }
+
+    public void setEmvTag(String tag, String value) {
+
+    }
+
+    public String getEmvTag(String tag) {
+        return null;
+    }
+
+    public String getEmvTags(List<String> tagList) {
+        return null;
+    }
+
+    public void saveEmvAppParamList(int groupId, List<String> emvAppList) {
+
+    }
+
+    public List<String> getEmvAppParamList(int groupId) {
+        return null;
+    }
+
+    public void clearAllEmvAppParams() {
+
+    }
+
+    public void saveEmvKeyParamList(int groupId, List<String> emvKeyList) {
+
+    }
+
+    public List<String> getEmvKeyParamList(int groupId) {
+        return null;
+    }
+
+    public void clearAllEmvKeyParams() {
+
     }
 }

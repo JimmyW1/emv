@@ -63,18 +63,5 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
         jumpToState(STATE_IDLE);
     }
 
-    @Override
-    public void setEmvTag(String tag, String value) {
 
-    }
-
-    @Override
-    public String getEmvTag(String tag) {
-        return null;
-    }
-
-    @Override
-    public String getEmvTags(List<String> tagList) {
-        return null;
-    }
 }

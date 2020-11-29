@@ -1,16 +1,22 @@
 package com.vfi.android.emvkernel.database;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DbManager implements IDbOperation {
     private String dbRootPath;
+    private Map<String, List<String>> emvAppParamsMap;
+    private Map<String, List<String>> emvKeyParamsMap;
 
     private static class SingletonHolder {
         private static final DbManager INSTANCE = new DbManager();
     }
 
     private DbManager() {
-
+        emvAppParamsMap = new HashMap<>();
+        emvKeyParamsMap = new HashMap<>();
     }
 
     public static DbManager getInstance(String dbRootPath) {
@@ -40,5 +46,25 @@ public class DbManager implements IDbOperation {
 
     public void setDbRootPath(String dbRootPath) {
         this.dbRootPath = dbRootPath;
+    }
+
+    @Override
+    public void saveEmvAppParamList(int groupId, List<String> emvAppList) {
+
+    }
+
+    @Override
+    public List<String> getEmvAppParamList(int groupId) {
+        return null;
+    }
+
+    @Override
+    public void saveEmvKeyParamList(int groupId, List<String> emvKeyList) {
+
+    }
+
+    @Override
+    public List<String> getEmvKeyParamList(int groupId) {
+        return null;
     }
 }

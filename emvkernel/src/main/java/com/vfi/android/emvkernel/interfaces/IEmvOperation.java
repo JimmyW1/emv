@@ -11,4 +11,10 @@ public interface IEmvOperation {
     void setEmvTag(String tag, String value);
     String getEmvTag(String tag);
     String getEmvTags(List<String> tagList);
+    void saveEmvAppParamList(int groupId, List<String> emvAppList);
+    List<String> getEmvAppParamList(int groupId);
+    void clearAllEmvAppParams();
+    void saveEmvKeyParamList(int groupId, List<String> emvKeyList);
+    List<String> getEmvKeyParamList(int groupId);
+    void clearAllEmvKeyParams();
 }

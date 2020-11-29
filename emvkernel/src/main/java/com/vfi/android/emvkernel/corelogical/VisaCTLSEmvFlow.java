@@ -35,19 +35,4 @@ public class VisaCTLSEmvFlow extends BaseEmvFlow implements IEmvOperation {
     public void stopEmvFlow() {
 
     }
-
-    @Override
-    public void setEmvTag(String tag, String value) {
-
-    }
-
-    @Override
-    public String getEmvTag(String tag) {
-        return null;
-    }
-
-    @Override
-    public String getEmvTags(List<String> tagList) {
-        return null;
-    }
 }
