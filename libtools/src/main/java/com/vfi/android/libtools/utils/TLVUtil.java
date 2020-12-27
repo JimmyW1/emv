@@ -2,7 +2,9 @@ package com.vfi.android.libtools.utils;
 
 import com.vfi.android.libtools.consts.TAGS;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TLVUtil {
@@ -20,6 +22,60 @@ public class TLVUtil {
         parseTags(tlvMap, tlvStrBytes, 0);
 
         return tlvMap;
+    }
+
+    public static List<String> getTagList(String tlvHexStr, String tagHex) {
+        List<String> tagList = new ArrayList<>();
+
+        if (tlvHexStr == null || tagHex == null) {
+            return tagList;
+        }
+
+        byte[] tlvStrBytes = StringUtil.hexStr2Bytes(tlvHexStr);
+        byte[] tagBytes = StringUtil.hexStr2Bytes(tagHex);
+
+        for (int i = 0; i < tlvStrBytes.length; ) {
+            boolean isCorrectTag = true;
+            for (int j = 0; j < tagBytes.length; j++) {
+                if (tlvStrBytes[i] != tagBytes[j]) {
+                    isCorrectTag = false;
+                    i++;
+                    break;
+                }
+
+                i++;
+            }
+
+            if (isCorrectTag) {
+                boolean isTwoByteLen = false;
+                if ((tlvStrBytes[i] & 0x80) > 0) {
+                    isTwoByteLen = true;
+                }
+
+                int len = 0;
+                if (isTwoByteLen) {
+                    tlvStrBytes[i] |= 0x7f;
+                    len = Integer.parseInt(StringUtil.byte2HexStr(tlvStrBytes, i, 2), 16);
+                    i += 2;
+                } else {
+                    len = Integer.parseInt(StringUtil.byte2HexStr(tlvStrBytes, i, 1), 16);
+                    i++;
+                }
+
+                String value = StringUtil.byte2HexStr(tlvStrBytes, i, len);
+                tagList.add(value);
+                i += len;
+            }
+        }
+
+        LogUtil.d(TAG, "TagList size=" + tagList.size());
+        LogUtil.d(TAG, "===================================");
+        for (int i = 0; i < tagList.size(); i++) {
+            LogUtil.d(TAG, "tag[" + tagHex + "] " + i + " =[" + tagList.get(i) + "]");
+        }
+        LogUtil.d(TAG, "===================================");
+
+        return tagList;
     }
 
     public static void parseTags(Map<String, String> map, byte[] tlvStrBytes, int start) {

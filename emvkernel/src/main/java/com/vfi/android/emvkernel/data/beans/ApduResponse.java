@@ -42,6 +42,11 @@ public class ApduResponse {
     private String status; // hex string of status
     private byte[] data;
 
+    /**
+     * {@link com.vfi.android.emvkernel.data.consts.EMVResultCode}
+     */
+    private int errorCode;
+
     public ApduResponse(byte[] response) {
         LogUtil.d(TAG, "response=[" + StringUtil.byte2HexStr(response) + "]");
         if (response == null || response.length < 2) {
@@ -77,5 +82,13 @@ public class ApduResponse {
 
     public void setSuccess(boolean success) {
         isSuccess = success;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
     }
 }

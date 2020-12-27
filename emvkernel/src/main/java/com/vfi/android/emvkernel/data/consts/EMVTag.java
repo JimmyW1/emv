@@ -14,4 +14,13 @@ public class EMVTag {
     public final static String tag9F38 = "9F38"; // PDOL (O)
     public final static String tag9F12 = "9F12"; // Application Preferred Name (O)
     public final static String tag9F4D = "9F4D"; // Log Entry (O)
+    //read record
+    public final static String tag70 = "70"; // Payment System Directory Record Format (M)
+    public final static String tag61 = "61"; // an Application Template  (M) // subTag of Tag70
+    public final static String tag4F = "4F"; // ADF Name  (M)  // subTag of Tag61
+//    public final static String tag50 = "50"; // Application Label  (M)  // subTag of Tag61
+//    public final static String tag9F12 = "9F12"; // Application Preferred Name (O)  // subTag of Tag61
+//    public final static String tag87 = "87"; // Application Priority Indicator (O)  // subTag of Tag61
+    public final static String tag73 = "73"; // Directory Discretionary Template (O)  // subTag of Tag61
+
 }

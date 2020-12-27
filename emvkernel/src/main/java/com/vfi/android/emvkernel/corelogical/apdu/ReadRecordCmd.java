@@ -8,7 +8,7 @@ public class ReadRecordCmd extends ApduCmd {
         setCla((byte) 0x00);
         setIns((byte) 0xB2);
         setP1(recordNum);
-        setP2((byte) (recordNum << 3 | 0x40));
+        setP2((byte) (sfi << 3 | 0x04));
         setLe((byte) 0x00);
     }
 }

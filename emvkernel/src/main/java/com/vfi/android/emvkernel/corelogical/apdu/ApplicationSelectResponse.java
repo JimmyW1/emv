@@ -1,6 +1,7 @@
 package com.vfi.android.emvkernel.corelogical.apdu;
 
 import com.vfi.android.emvkernel.data.beans.ApduResponse;
+import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.SW12;
 import com.vfi.android.libtools.utils.LogUtil;
@@ -33,71 +34,100 @@ public class ApplicationSelectResponse extends ApduResponse {
         super(response);
 
         if (isSuccess()) {
-            String hexFCIStr = StringUtil.byte2HexStr(getData());
-            Map<String, String> tlvMap = TLVUtil.toTlvMap(hexFCIStr);
-            if (tlvMap.containsKey(EMVTag.tag6F)) {
-                tag6F = tlvMap.get(EMVTag.tag6F);
-                LogUtil.d(TAG, "tag6F=" + tag6F);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag84)) {
-                tag84 = tlvMap.get(EMVTag.tag84);
-                LogUtil.d(TAG, "tag84=" + tag84);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tagA5)) {
-                tagA5 = tlvMap.get(EMVTag.tagA5);
-                LogUtil.d(TAG, "tagA5=" + tagA5);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag88)) {
-                tag88 = tlvMap.get(EMVTag.tag88);
-                LogUtil.d(TAG, "tag88=" + tag88);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag5F2D)) {
-                tag5F2D = tlvMap.get(EMVTag.tag5F2D);
-                LogUtil.d(TAG, "tag5F2D=" + tag5F2D);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag9F11)) {
-                tag9F11 = tlvMap.get(EMVTag.tag9F11);
-                LogUtil.d(TAG, "tag9F11=" + tag9F11);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tagBF0C)) {
-                tagBF0C = tlvMap.get(EMVTag.tagBF0C);
-                LogUtil.d(TAG, "tagBF0C=" + tagBF0C);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag50)) {
-                tag50 = tlvMap.get(EMVTag.tag50);
-                LogUtil.d(TAG, "tag50=" + tag50);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag87)) {
-                tag87 = tlvMap.get(EMVTag.tag87);
-                LogUtil.d(TAG, "tag87=" + tag87);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag9F38)) {
-                tag9F38 = tlvMap.get(EMVTag.tag9F38);
-                LogUtil.d(TAG, "tag9F38=" + tag9F38);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag9F12)) {
-                tag9F12 = tlvMap.get(EMVTag.tag9F12);
-                LogUtil.d(TAG, "tag9F12=" + tag9F12);
-            }
-
-            if (tlvMap.containsKey(EMVTag.tag9F4D)) {
-                tag9F4D = tlvMap.get(EMVTag.tag9F4D);
-                LogUtil.d(TAG, "tag9F4D=" + tag9F4D);
+            printFCIDebugInfo();
+        } else if (getStatus() != null) {
+            /**
+             * If the card is blocked or the SELECT command is not supported (both conditions represented by SW1 SW2 = '6A81'),
+             * the terminal terminates the session.
+             */
+            isNeedTerminate = false;
+            switch (getStatus()) {
+                case SW12.ERR_CARD_BLOCKED: // 6A81
+                    isNeedTerminate = true;
+                    setErrorCode(EMVResultCode.ERR_CARD_BLOCKED);
+                    LogUtil.e(TAG, "ERROR: Card blocked");
+                    break;
+                case SW12.ERR_NOT_PSE: // 6A82
+                    LogUtil.d(TAG, "ERROR: No PSE found");
+                    break;
+                case SW12.ERR_PSE_BLOCKED:
+                    LogUtil.d(TAG, "ERROR: PSE blocked");
+                    break;
+                default:
+                    /**
+                     * If the card returns any other value in SW1 SW2, the terminal shall use the
+                     * List of AIDs method described in section 12.3.3.
+                     */
+                    LogUtil.d(TAG, "ERROR: PSE Other error");
+                    break;
             }
         } else {
-            if (getStatus() != null && getStatus().equals(SW12.OPFAIL_FUNC_NOT_SUPPORT)) { // 6A81
-                isNeedTerminate = true;
-            }
+            // no status response
+            isNeedTerminate = false;
+        }
+    }
+
+    private void printFCIDebugInfo() {
+        String hexFCIStr = StringUtil.byte2HexStr(getData());
+        Map<String, String> tlvMap = TLVUtil.toTlvMap(hexFCIStr);
+        if (tlvMap.containsKey(EMVTag.tag6F)) {
+            tag6F = tlvMap.get(EMVTag.tag6F);
+            LogUtil.d(TAG, "tag6F=" + tag6F);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag84)) {
+            tag84 = tlvMap.get(EMVTag.tag84);
+            LogUtil.d(TAG, "tag84=" + tag84);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tagA5)) {
+            tagA5 = tlvMap.get(EMVTag.tagA5);
+            LogUtil.d(TAG, "tagA5=" + tagA5);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag88)) {
+            tag88 = tlvMap.get(EMVTag.tag88);
+            LogUtil.d(TAG, "tag88=" + tag88);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag5F2D)) {
+            tag5F2D = tlvMap.get(EMVTag.tag5F2D);
+            LogUtil.d(TAG, "tag5F2D=" + tag5F2D);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag9F11)) {
+            tag9F11 = tlvMap.get(EMVTag.tag9F11);
+            LogUtil.d(TAG, "tag9F11=" + tag9F11);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tagBF0C)) {
+            tagBF0C = tlvMap.get(EMVTag.tagBF0C);
+            LogUtil.d(TAG, "tagBF0C=" + tagBF0C);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag50)) {
+            tag50 = tlvMap.get(EMVTag.tag50);
+            LogUtil.d(TAG, "tag50=" + tag50);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag87)) {
+            tag87 = tlvMap.get(EMVTag.tag87);
+            LogUtil.d(TAG, "tag87=" + tag87);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag9F38)) {
+            tag9F38 = tlvMap.get(EMVTag.tag9F38);
+            LogUtil.d(TAG, "tag9F38=" + tag9F38);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag9F12)) {
+            tag9F12 = tlvMap.get(EMVTag.tag9F12);
+            LogUtil.d(TAG, "tag9F12=" + tag9F12);
+        }
+
+        if (tlvMap.containsKey(EMVTag.tag9F4D)) {
+            tag9F4D = tlvMap.get(EMVTag.tag9F4D);
+            LogUtil.d(TAG, "tag9F4D=" + tag9F4D);
         }
     }
 

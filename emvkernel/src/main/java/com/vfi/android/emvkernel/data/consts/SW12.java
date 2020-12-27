@@ -1,23 +1,25 @@
 package com.vfi.android.emvkernel.data.consts;
 
 public class SW12 {
-    public static String OK = "9000";
+    public static final String OK = "9000";
 
-    public static String OPFAIL_FUNC_NOT_SUPPORT = "6A81";
+    public static final String ERR_CARD_BLOCKED = "6A81";
+    public static final String ERR_NOT_PSE = "6A82";
+    public static final String ERR_PSE_BLOCKED = "6A83";
 
-    public static String OPFAIL_INCORRECT_PARAM = "6A86";
-    public static String OPFAIL_FILE_FULL       = "6A84";
-    public static String OPFAIL_SECURE_MSG_NOT_SUPPORT = "6882";
-    public static String OPFAIL_CMD_NOT_ALLOW   = "6986";
-    public static String OPFAIL_SECURITY_STATUS_NOT_SATIFIED = "6982";
-    public static String OPFAIL_WRONG_DATA      = "6A80";
+    public static final String OPFAIL_INCORRECT_PARAM = "6A86";
+    public static final String OPFAIL_FILE_FULL       = "6A84";
+    public static final String OPFAIL_SECURE_MSG_NOT_SUPPORT = "6882";
+    public static final String OPFAIL_CMD_NOT_ALLOW   = "6986";
+    public static final String OPFAIL_SECURITY_STATUS_NOT_SATIFIED = "6982";
+    public static final String OPFAIL_WRONG_DATA      = "6A80";
 
-    public static String OPFAIL_MUTUAL_AUTH_FAILED = "6801";
-    public static String OPFAIL_MUTUAL_AUTH_NEEDED = "6803";
-    public static String OPFAIL_STATUS_NOT_SATISFIED = "6804";
+    public static final String OPFAIL_MUTUAL_AUTH_FAILED = "6801";
+    public static final String OPFAIL_MUTUAL_AUTH_NEEDED = "6803";
+    public static final String OPFAIL_STATUS_NOT_SATISFIED = "6804";
 
     // self define
-    public static String ERR_NO_COMMUNICATION = "ERR_NO_COMMUNICATION";
+    public static final String ERR_NO_COMMUNICATION = "ERR_NO_COMMUNICATION";
 
     /**
      * 0x9000 OK. Command executed successfully
