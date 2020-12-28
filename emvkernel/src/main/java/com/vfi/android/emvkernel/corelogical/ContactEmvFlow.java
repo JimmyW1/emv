@@ -17,8 +17,6 @@ import java.util.List;
 import static com.vfi.android.emvkernel.corelogical.states.base.EmvStateType.*;
 
 public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
-    private EmvParams emvParams;
-
     public ContactEmvFlow(EmvContext emvContext) {
         super(emvContext);
     }
@@ -47,7 +45,7 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
 
     @Override
     public int initEmvFlow(EmvParams emvParams) {
-        this.emvParams = emvParams;
+        getEmvContext().setEmvParams(emvParams);
         jumpToState(STATE_IDLE);
         return 0;
     }

@@ -1,6 +1,7 @@
 package com.vfi.android.emvkernel.database;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,12 @@ public class DbManager implements IDbOperation {
 
     @Override
     public List<String> getEmvAppParamList(int groupId) {
-        return null;
+        List<String> appParamList = new ArrayList<>();
+        appParamList.add("9F0605A000000003" + "DF010100");
+        appParamList.add("9F0605A000000004" + "DF010100");
+        appParamList.add("9F0605A000000333" + "DF010100");
+
+        return appParamList;
     }
 
     @Override

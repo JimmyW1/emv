@@ -2,6 +2,8 @@ package com.vfi.android.emvkernel.corelogical.states.base;
 
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.data.beans.ApduCmd;
+import com.vfi.android.emvkernel.data.beans.EmvApplication;
+import com.vfi.android.emvkernel.data.beans.EmvTransData;
 import com.vfi.android.libtools.consts.TAGS;
 
 public abstract class AbstractEmvState implements IEmvState {
@@ -40,5 +42,21 @@ public abstract class AbstractEmvState implements IEmvState {
     @Override
     public void run(EmvContext context) {
         this.emvContext = context;
+    }
+
+    public EmvContext getEmvContext() {
+        return emvContext;
+    }
+
+    public EmvTransData getEmvTransData() {
+        return emvContext.getCurrentTransData();
+    }
+
+    public void addCandidateApplication(EmvApplication emvApplication) {
+        getEmvTransData().getCandidateList().add(emvApplication);
+    }
+
+    public void clearCandidateList() {
+        getEmvTransData().getCandidateList().clear();
     }
 }

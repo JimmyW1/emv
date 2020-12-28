@@ -2,6 +2,7 @@ package com.vfi.android.emvkernel.corelogical.states.base;
 
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
+import com.vfi.android.emvkernel.data.beans.EmvTransData;
 import com.vfi.android.emvkernel.database.IDbOperation;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
@@ -13,6 +14,8 @@ public class EmvContext {
     private IDbOperation dbOperation;
     private EmvParams emvParams;
     private Message message;
+
+    private EmvTransData currentTransData;
 
     public EmvContext() {
     }
@@ -50,6 +53,10 @@ public class EmvContext {
     }
 
     public EmvParams getEmvParams() {
+        if (emvParams == null) {
+            emvParams = new EmvParams();
+        }
+
         return emvParams;
     }
 
@@ -63,5 +70,16 @@ public class EmvContext {
 
     public void setMessage(Message message) {
         this.message = message;
+    }
+
+    public EmvTransData getCurrentTransData() {
+        if (currentTransData == null) {
+            currentTransData = new EmvTransData();
+        }
+        return currentTransData;
+    }
+
+    public void setCurrentTransData(EmvTransData currentTransData) {
+        this.currentTransData = currentTransData;
     }
 }

@@ -47,11 +47,12 @@ public class ApplicationSelectResponse extends ApduResponse {
                     setErrorCode(EMVResultCode.ERR_CARD_BLOCKED);
                     LogUtil.e(TAG, "ERROR: Card blocked");
                     break;
-                case SW12.ERR_NOT_PSE: // 6A82
+                case SW12.ERR_DF_NOT_FOUND: // 6A82
                     LogUtil.d(TAG, "ERROR: No PSE found");
                     break;
-                case SW12.ERR_PSE_BLOCKED:
-                    LogUtil.d(TAG, "ERROR: PSE blocked");
+                case SW12.ERR_DF_BLOCKED: // 6283, if asi is part match need continue.
+                    setErrorCode(EMVResultCode.ERR_APPLICATION_BLOCKED);
+                    LogUtil.d(TAG, "ERROR: DF blocked"); // PSE block and APPLICATION block
                     break;
                 default:
                     /**
@@ -65,6 +66,14 @@ public class ApplicationSelectResponse extends ApduResponse {
             // no status response
             isNeedTerminate = false;
         }
+    }
+
+    public boolean isApplicationBlocked() {
+        if (getStatus() != null && getStatus().equals(SW12.ERR_DF_BLOCKED)) {
+            return true;
+        }
+
+        return false;
     }
 
     private void printFCIDebugInfo() {
@@ -222,6 +231,9 @@ public class ApplicationSelectResponse extends ApduResponse {
     }
 
     public String getTag84() {
+        if (tag84 == null) {
+            tag84 = "";
+        }
         return tag84;
     }
 

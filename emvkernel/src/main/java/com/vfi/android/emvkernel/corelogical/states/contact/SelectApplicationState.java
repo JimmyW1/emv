@@ -8,11 +8,16 @@ import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartSelectApp;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StopEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
+import com.vfi.android.emvkernel.data.beans.EmvApplication;
+import com.vfi.android.emvkernel.data.consts.EMVTag;
+import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
+import com.vfi.android.libtools.utils.TLVUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.vfi.android.emvkernel.corelogical.states.base.EmvStateType.*;
 
@@ -34,11 +39,20 @@ public class SelectApplicationState extends AbstractEmvState {
                 byte[] tag88 = StringUtil.hexStr2Bytes(response.getTag88()); // sfi
                 if (tag88 != null && tag88.length > 0) {
                     recordResponseList = startReadRecord(tag88[0]);
-                    if (recordResponseList.size() == 0) {
+                    if (recordResponseList.size() <= 0) {
                         isNeedSelectWithADF = true;
+                    } else {
+                        buildCandidateList(recordResponseList);
+                        if (getEmvTransData().getCandidateList().size() <= 0) {
+                            isNeedSelectWithADF = true;
+                        } else if (getEmvTransData().getCandidateList().size() == 1){
+                            // TODO
+                        } else {
+                            // TODO
+                        }
                     }
                 } else {
-
+                    isNeedSelectWithADF = true;
                 }
             } else if (response.isNeedTerminate()) {
                 // TODO stop emv
@@ -48,9 +62,13 @@ public class SelectApplicationState extends AbstractEmvState {
 
             if (isNeedSelectWithADF) {
                 LogUtil.d(TAG, "Select with PSE -> Select with ADF");
-                response = selectWithADF();
-                if (response.isNeedTerminate()) {
-                    // TODO stop emv
+                selectWithADFAndBuildCandidateList();
+                if (getEmvTransData().getCandidateList().size() <= 0) {
+                    // TODO
+                } else if (getEmvTransData().getCandidateList().size() == 1){
+                    // TODO
+                } else {
+                    // TODO
                 }
             }
         }
@@ -59,17 +77,46 @@ public class SelectApplicationState extends AbstractEmvState {
     private ApplicationSelectResponse trySelectWithPSE() {
         byte[] retData = executeApduCmd(new ApplicationSelectCmd(true, true, "1PAY.SYS.DDF01"));
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
-        if (!response.isSuccess()) {
-            sendMessage(new Msg_StopEmv(Msg_StopEmv.ERR_SELECT_APP_FAILED));
-            jumpToState(STATE_STOP);
-        }
-
         return response;
     }
 
-    private ApplicationSelectResponse selectWithADF() {
+    private void selectWithADFAndBuildCandidateList() {
+        clearCandidateList();
 
-        return null;
+        List<Map<String, String>> terminalApplicationMapList = getEmvTransData().getTerminalApplicationMapList();
+        for (Map<String, String> map : terminalApplicationMapList) {
+            String appName = map.get(TerminalTag.AID);
+            String asi = map.get(TerminalTag.ASI);
+            boolean isFullMatch = (asi != null && asi.equals("00")) ? false : true;
+            ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch);
+            if (response.isNeedTerminate()) {
+                // TODO
+                break;
+            }
+        }
+    }
+
+    private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch) {
+        byte[] retData = executeApduCmd(new ApplicationSelectCmd(isSelectFirst, true, appName));
+        ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
+        if (response.isSuccess() || response.isApplicationBlocked()) {
+            String dfName = response.getTag84();
+            if (dfName.startsWith(appName)) {
+                if (appName.length() == dfName.length()) {
+                    if (!response.isApplicationBlocked()) {
+                        addCandidateApplication(new EmvApplication(dfName));
+                    }
+                } else if (!isFullMatch){
+                    return selectWithADF(false, appName, false);
+                }
+            } else {
+                // no happened.
+            }
+        } else {
+            LogUtil.d(TAG, "Select with AID[" + appName + "] not found.");
+        }
+
+        return response;
     }
 
     private List<ReadRecordResponse> startReadRecord(byte sfi) {
@@ -90,7 +137,21 @@ public class SelectApplicationState extends AbstractEmvState {
         return recordResponseList;
     }
 
-    private void buildCandidateList() {
+    private void buildCandidateList(List<ReadRecordResponse> readRecordResponseList) {
+        List<Map<String, String>> terminalApplicationMapList = getEmvTransData().getTerminalApplicationMapList();
 
+        for (ReadRecordResponse response : readRecordResponseList) {
+            for (String tag61 : response.getTag61List()) {
+                Map<String, String> tag61Map = TLVUtil.toTlvMap(tag61);
+
+                for (Map<String, String> map : terminalApplicationMapList) {
+                    if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.AID)
+                            && tag61Map.get(EMVTag.tag4F).equals(map.get(TerminalTag.AID))) {
+                        EmvApplication emvApplication = new EmvApplication(tag61Map.get(EMVTag.tag4F));
+                        addCandidateApplication(emvApplication);
+                    }
+                }
+            }
+        }
     }
 }

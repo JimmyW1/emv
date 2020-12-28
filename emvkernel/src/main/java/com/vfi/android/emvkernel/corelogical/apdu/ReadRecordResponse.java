@@ -32,7 +32,7 @@ public class ReadRecordResponse extends ApduResponse {
             }
         } else if (getStatus() != null) {
             switch (getStatus()) {
-                case SW12.ERR_PSE_BLOCKED: // 6A83
+                case SW12.ERR_NO_RECORD: // 6A83
                     isNoRecord = true;
                     break;
             }

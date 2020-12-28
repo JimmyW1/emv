@@ -22,6 +22,7 @@ public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
 
     @Override
     public int initEmvFlow(EmvParams emvParams) {
+        getEmvContext().setEmvParams(emvParams);
         return 0;
     }
 
