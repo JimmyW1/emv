@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
 
             var emvParams = EmvParams()
             emvParams.isContact = true;
+            emvParams.isSupportCardHolderSelect = false;
             emvManager.initEmvFlow(emvParams)
             var emvHandler = EmvHandler(this, emvManager)
             emvManager.startEMVFlow(emvHandler)

@@ -98,4 +98,9 @@ public abstract class AbstractEmvState implements IEmvState {
     protected void setErrorCode(int errorCode) {
         getEmvTransData().setErrorCode(errorCode);
     }
+
+    protected void stopEmv() {
+        LogUtil.d(TAG, "stopEmv errorCode=[" + getEmvTransData().getErrorCode() + "]");
+        // TODO
+    }
 }

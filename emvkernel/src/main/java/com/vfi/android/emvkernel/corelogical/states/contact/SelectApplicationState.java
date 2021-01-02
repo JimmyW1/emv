@@ -20,6 +20,8 @@ import com.vfi.android.libtools.utils.StringUtil;
 import com.vfi.android.libtools.utils.TLVUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -122,11 +124,37 @@ public class SelectApplicationState extends AbstractEmvState {
             appInfoList.add(appInfo);
         }
 
+        Collections.sort(appInfoList, new Comparator<AppInfo>() {
+            @Override
+            public int compare(AppInfo app1, AppInfo app2) {
+                return app1.getAppPriorityIndicator() - app2.getAppPriorityIndicator();
+            }
+        });
+
         return appInfoList;
     }
 
     private void autoSelectEmvApplication() {
+        List<EmvApplication> emvApplicationList = getEmvTransData().getCandidateList();
+        String highestPriorityDfName = null;
+        byte highestPriority = '0';
 
+        for (EmvApplication emvApplication : emvApplicationList) {
+            if (!emvApplication.isAutoSelect()) {
+                continue;
+            } else if (highestPriorityDfName == null || emvApplication.getAppPriorityIndicator() < highestPriority){
+                highestPriorityDfName = emvApplication.getDfName();
+                highestPriority = emvApplication.getAppPriorityIndicator();
+            }
+        }
+
+        LogUtil.d(TAG, "autoSelectEmvApplication dfName=[" + highestPriorityDfName + "]");
+        if (highestPriorityDfName == null) {
+            setErrorCode(EMVResultCode.ERR_NOT_SUPPORT_CARDHOLDER_SELECT);
+            stopEmv();
+        } else {
+            doFinalSelectProcess(highestPriorityDfName);
+        }
     }
 
     private void doFinalSelectProcess(String dfName) {
@@ -161,10 +189,6 @@ public class SelectApplicationState extends AbstractEmvState {
                 break;
             }
         }
-    }
-
-    private void stopEmv() {
-        // TODO
     }
 
     private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch) {
