@@ -1,13 +1,13 @@
 package com.vfi.android.emvkernel.data.beans;
 
 public class EmvApplication {
-    private String aidName;
+    private String dfName;
 
-    public EmvApplication(String aidName) {
-        this.aidName = aidName;
+    public EmvApplication(String dfName) {
+        this.dfName = dfName;
     }
 
-    public String getAidName() {
-        return aidName;
+    public String getDfName() {
+        return dfName;
     }
 }

@@ -1,5 +1,7 @@
 package com.vfi.android.libtools.utils;
 
+import com.vfi.android.libtools.consts.TAGS;
+
 public class LogUtil {
     private static ILogEntry logEntry = new JavaLogEntry();
     public static boolean isShowLog = true;

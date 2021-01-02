@@ -57,9 +57,11 @@ public class DbManager implements IDbOperation {
     @Override
     public List<String> getEmvAppParamList(int groupId) {
         List<String> appParamList = new ArrayList<>();
+        appParamList.add("9F0608A000000003101001" + "DF010100");
         appParamList.add("9F0605A000000003" + "DF010100");
         appParamList.add("9F0605A000000004" + "DF010100");
         appParamList.add("9F0605A000000333" + "DF010100");
+        appParamList.add("9F0605A000000677" + "DF010100");
 
         return appParamList;
     }

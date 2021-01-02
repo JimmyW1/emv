@@ -5,6 +5,7 @@ import com.vfi.android.emvkernel.data.beans.ApduCmd;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.beans.EmvTransData;
 import com.vfi.android.libtools.consts.TAGS;
+import com.vfi.android.libtools.utils.LogUtil;
 
 public abstract class AbstractEmvState implements IEmvState {
     protected final String TAG = TAGS.EMV_STATE;
@@ -53,10 +54,26 @@ public abstract class AbstractEmvState implements IEmvState {
     }
 
     public void addCandidateApplication(EmvApplication emvApplication) {
-        getEmvTransData().getCandidateList().add(emvApplication);
+        if (isDFNameExist(emvApplication.getDfName())) {
+            LogUtil.d(TAG, "Skip tag4F[" + emvApplication.getDfName() + "] add to candidate list, exist in candidate now");
+        } else {
+            LogUtil.d(TAG, "tag4F[" + emvApplication.getDfName() + "] add to candidate list.");
+            getEmvTransData().getCandidateList().add(emvApplication);
+        }
     }
 
     public void clearCandidateList() {
+        LogUtil.d(TAG, "clearCandidateList");
         getEmvTransData().getCandidateList().clear();
+    }
+
+    private boolean isDFNameExist(String dfName) {
+        for (EmvApplication emvApplication : getEmvTransData().getCandidateList()) {
+            if (dfName.equals(emvApplication.getDfName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

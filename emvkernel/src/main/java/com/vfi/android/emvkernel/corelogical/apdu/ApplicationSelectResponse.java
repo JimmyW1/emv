@@ -48,7 +48,7 @@ public class ApplicationSelectResponse extends ApduResponse {
                     LogUtil.e(TAG, "ERROR: Card blocked");
                     break;
                 case SW12.ERR_DF_NOT_FOUND: // 6A82
-                    LogUtil.d(TAG, "ERROR: No PSE found");
+                    LogUtil.d(TAG, "ERROR: DF Name not found");
                     break;
                 case SW12.ERR_DF_BLOCKED: // 6283, if asi is part match need continue.
                     setErrorCode(EMVResultCode.ERR_APPLICATION_BLOCKED);

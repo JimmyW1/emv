@@ -75,7 +75,7 @@ public class SelectApplicationState extends AbstractEmvState {
     }
 
     private ApplicationSelectResponse trySelectWithPSE() {
-        byte[] retData = executeApduCmd(new ApplicationSelectCmd(true, true, "1PAY.SYS.DDF01"));
+        byte[] retData = executeApduCmd(new ApplicationSelectCmd(true, "1PAY.SYS.DDF01"));
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         return response;
     }
@@ -87,7 +87,7 @@ public class SelectApplicationState extends AbstractEmvState {
         for (Map<String, String> map : terminalApplicationMapList) {
             String appName = map.get(TerminalTag.AID);
             String asi = map.get(TerminalTag.ASI);
-            boolean isFullMatch = (asi != null && asi.equals("00")) ? false : true;
+            boolean isFullMatch = (asi == null || !asi.equals("00"));
             ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch);
             if (response.isNeedTerminate()) {
                 // TODO
@@ -97,16 +97,17 @@ public class SelectApplicationState extends AbstractEmvState {
     }
 
     private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch) {
-        byte[] retData = executeApduCmd(new ApplicationSelectCmd(isSelectFirst, true, appName));
+        byte[] retData = executeApduCmd(new ApplicationSelectCmd(isSelectFirst, appName));
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         if (response.isSuccess() || response.isApplicationBlocked()) {
             String dfName = response.getTag84();
+
             if (dfName.startsWith(appName)) {
-                if (appName.length() == dfName.length()) {
-                    if (!response.isApplicationBlocked()) {
-                        addCandidateApplication(new EmvApplication(dfName));
-                    }
-                } else if (!isFullMatch){
+                if (!response.isApplicationBlocked()) {
+                    addCandidateApplication(new EmvApplication(dfName));
+                }
+
+                if (!isFullMatch && appName.length() != dfName.length()){
                     return selectWithADF(false, appName, false);
                 }
             } else {
@@ -138,6 +139,7 @@ public class SelectApplicationState extends AbstractEmvState {
     }
 
     private void buildCandidateList(List<ReadRecordResponse> readRecordResponseList) {
+        LogUtil.d(TAG, "buildCandidateList");
         List<Map<String, String>> terminalApplicationMapList = getEmvTransData().getTerminalApplicationMapList();
 
         for (ReadRecordResponse response : readRecordResponseList) {
@@ -145,10 +147,17 @@ public class SelectApplicationState extends AbstractEmvState {
                 Map<String, String> tag61Map = TLVUtil.toTlvMap(tag61);
 
                 for (Map<String, String> map : terminalApplicationMapList) {
-                    if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.AID)
-                            && tag61Map.get(EMVTag.tag4F).equals(map.get(TerminalTag.AID))) {
-                        EmvApplication emvApplication = new EmvApplication(tag61Map.get(EMVTag.tag4F));
-                        addCandidateApplication(emvApplication);
+                    if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.AID)) {
+                        String asi = map.get(TerminalTag.ASI);
+                        boolean isFullMatch = (asi == null || !asi.equals("00"));
+                        String tag4F = tag61Map.get(EMVTag.tag4F);
+                        String terminalAid = map.get(TerminalTag.AID);
+                        LogUtil.d(TAG, "==> Tag4F[" + tag4F + "] Terminal AID[" + terminalAid + "] isFullMatch=" + isFullMatch);
+
+                        if ((isFullMatch && tag4F.equals(terminalAid)) || (!isFullMatch && tag4F.startsWith(terminalAid))) {
+                            EmvApplication emvApplication = new EmvApplication(tag61Map.get(EMVTag.tag4F));
+                            addCandidateApplication(emvApplication);
+                        }
                     }
                 }
             }
