@@ -8,6 +8,7 @@ public class EmvTransData {
     private List<EmvApplication> candidateList;
     private List<Map<String, String>> terminalApplicationMapList;
     private List<String> caPublicKeyList;
+    private int errorCode;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
@@ -63,5 +64,13 @@ public class EmvTransData {
         }
 
         this.caPublicKeyList = caPublicKeyList;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
     }
 }

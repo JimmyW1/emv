@@ -4,11 +4,15 @@ import com.vfi.android.emvkernel.corelogical.apdu.ApplicationSelectCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ApplicationSelectResponse;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
+import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartSelectApp;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StopEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
+import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
+import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.libtools.utils.LogUtil;
@@ -29,48 +33,110 @@ public class SelectApplicationState extends AbstractEmvState {
     @Override
     public void run(EmvContext context) {
         super.run(context);
-        LogUtil.d(TAG, "SelectApplicationState msgType=" + context.getMessage().getMessageType());
-        if (context.getMessage() instanceof Msg_StartSelectApp) {
-            boolean isNeedSelectWithADF = false;
-            List<ReadRecordResponse> recordResponseList;
-            ApplicationSelectResponse response = trySelectWithPSE();
-            if (response.isSuccess() && response.getTag88() != null) {
-                // PSE success
-                byte[] tag88 = StringUtil.hexStr2Bytes(response.getTag88()); // sfi
-                if (tag88 != null && tag88.length > 0) {
-                    recordResponseList = startReadRecord(tag88[0]);
-                    if (recordResponseList.size() <= 0) {
+        Message message = context.getMessage();
+        LogUtil.d(TAG, "SelectApplicationState msgType=" + message.getMessageType());
+        if (message instanceof Msg_StartSelectApp) {
+            processStartSelectAppMessage(message);
+        } else if (message instanceof Msg_CardHolderSelectFinished) {
+            processCardHolderSelectFinishedMessage(message);
+        }
+    }
+
+    private void processStartSelectAppMessage(Message message) {
+        boolean isNeedSelectWithADF = false;
+        List<ReadRecordResponse> recordResponseList;
+        ApplicationSelectResponse response = trySelectWithPSE();
+        if (response.isSuccess() && response.getTag88() != null) {
+            // PSE success
+            byte[] tag88 = StringUtil.hexStr2Bytes(response.getTag88()); // sfi
+            if (tag88 != null && tag88.length > 0) {
+                recordResponseList = startReadRecord(tag88[0]);
+                if (recordResponseList.size() <= 0) {
+                    isNeedSelectWithADF = true;
+                } else {
+                    buildCandidateList(recordResponseList);
+                    if (getEmvTransData().getCandidateList().size() <= 0) {
                         isNeedSelectWithADF = true;
                     } else {
-                        buildCandidateList(recordResponseList);
-                        if (getEmvTransData().getCandidateList().size() <= 0) {
-                            isNeedSelectWithADF = true;
-                        } else if (getEmvTransData().getCandidateList().size() == 1){
-                            // TODO
-                        } else {
-                            // TODO
-                        }
+                        selectCandidateApplication();
                     }
-                } else {
-                    isNeedSelectWithADF = true;
                 }
-            } else if (response.isNeedTerminate()) {
-                // TODO stop emv
             } else {
                 isNeedSelectWithADF = true;
             }
+        } else if (response.isNeedTerminate()) {
+            setErrorCode(response.getErrorCode());
+            stopEmv();
+        } else {
+            isNeedSelectWithADF = true;
+        }
 
-            if (isNeedSelectWithADF) {
-                LogUtil.d(TAG, "Select with PSE -> Select with ADF");
-                selectWithADFAndBuildCandidateList();
-                if (getEmvTransData().getCandidateList().size() <= 0) {
-                    // TODO
-                } else if (getEmvTransData().getCandidateList().size() == 1){
-                    // TODO
-                } else {
-                    // TODO
-                }
+        if (isNeedSelectWithADF) {
+            LogUtil.d(TAG, "Select with PSE -> Select with ADF");
+            selectWithADFAndBuildCandidateList();
+            selectCandidateApplication();
+        }
+    }
+
+    private void processCardHolderSelectFinishedMessage(Message message) {
+        Msg_CardHolderSelectFinished msg = (Msg_CardHolderSelectFinished) message;
+        LogUtil.d(TAG, "isCancelled=" + msg.isCancelled() + " selected DF name=[" + msg.getSelectedDfName() + "]");
+        if (msg.isCancelled()) {
+            setErrorCode(EMVResultCode.ERR_CARDHOLDER_CANCELLED_TRANS);
+            stopEmv();
+        } else {
+            doFinalSelectProcess(msg.getSelectedDfName());
+        }
+    }
+
+    private void selectCandidateApplication() {
+        List<EmvApplication> candidateAppList = getEmvTransData().getCandidateList();
+        if (candidateAppList.size() == 0) {
+            setErrorCode(EMVResultCode.ERR_EMPTY_CANDIDATE_LIST);
+            stopEmv();
+        } else if (candidateAppList.size() == 1){
+            EmvApplication emvApplication = getEmvTransData().getCandidateList().get(0);
+            if (emvApplication.isAutoSelect()) {
+                doFinalSelectProcess(emvApplication.getDfName());
+            } else if (!getEmvContext().getEmvParams().isSupportCardHolderSelect()){
+                setErrorCode(EMVResultCode.ERR_NOT_SUPPORT_CARDHOLDER_SELECT);
+                stopEmv();
             }
+        } else if (getEmvContext().getEmvParams().isSupportCardHolderSelect()){
+            if (getEmvHandler() != null) {
+                getEmvHandler().onSelectApplication(getOrderedEmvApplications());
+            } else {
+                setErrorCode(EMVResultCode.ERR_NOT_SET_EMV_HANDLER);
+                stopEmv();
+            }
+        } else {
+            autoSelectEmvApplication();
+        }
+    }
+
+    private List<AppInfo> getOrderedEmvApplications() {
+        List<AppInfo> appInfoList = new ArrayList<>();
+
+        for (EmvApplication emvApplication : getEmvTransData().getCandidateList()) {
+            AppInfo appInfo = new AppInfo(emvApplication.getLabel(), emvApplication.getDfName(), emvApplication.getAppPriorityIndicator());
+            appInfoList.add(appInfo);
+        }
+
+        return appInfoList;
+    }
+
+    private void autoSelectEmvApplication() {
+
+    }
+
+    private void doFinalSelectProcess(String dfName) {
+        byte[] retData = executeApduCmd(new ApplicationSelectCmd(true, dfName));
+        ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
+        if (response.isSuccess()) {
+            // TODO set 9F06 equal to tag84
+        } else {
+            removeCandidateApplication(dfName);
+            selectCandidateApplication(); // select again
         }
     }
 
@@ -90,10 +156,15 @@ public class SelectApplicationState extends AbstractEmvState {
             boolean isFullMatch = (asi == null || !asi.equals("00"));
             ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch);
             if (response.isNeedTerminate()) {
-                // TODO
+                setErrorCode(response.getErrorCode());
+                stopEmv();
                 break;
             }
         }
+    }
+
+    private void stopEmv() {
+        // TODO
     }
 
     private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch) {
@@ -101,10 +172,13 @@ public class SelectApplicationState extends AbstractEmvState {
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         if (response.isSuccess() || response.isApplicationBlocked()) {
             String dfName = response.getTag84();
+            String applicationLabel = getApplicationLabel(response.getTag50());
 
             if (dfName.startsWith(appName)) {
                 if (!response.isApplicationBlocked()) {
-                    addCandidateApplication(new EmvApplication(dfName));
+                    if (applicationLabel != null && applicationLabel.length() > 0) {
+                        addCandidateApplication(new EmvApplication(dfName, applicationLabel, getAppPriorityIndicator(response.getTag87())));
+                    }
                 }
 
                 if (!isFullMatch && appName.length() != dfName.length()){
@@ -155,12 +229,33 @@ public class SelectApplicationState extends AbstractEmvState {
                         LogUtil.d(TAG, "==> Tag4F[" + tag4F + "] Terminal AID[" + terminalAid + "] isFullMatch=" + isFullMatch);
 
                         if ((isFullMatch && tag4F.equals(terminalAid)) || (!isFullMatch && tag4F.startsWith(terminalAid))) {
-                            EmvApplication emvApplication = new EmvApplication(tag61Map.get(EMVTag.tag4F));
-                            addCandidateApplication(emvApplication);
+                            if (tag61Map.containsKey(EMVTag.tag50)) {
+                                byte appPriorityIndicator = getAppPriorityIndicator(tag61Map.get(EMVTag.tag87));
+                                String applicationLabel = getApplicationLabel(tag61Map.get(EMVTag.tag50));
+                                if (applicationLabel != null && applicationLabel.length() > 0) {
+                                    EmvApplication emvApplication = new EmvApplication(tag4F, applicationLabel, appPriorityIndicator);
+                                    addCandidateApplication(emvApplication);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    public byte getAppPriorityIndicator(String tag87) {
+        byte appPriorityIndicator = '0';
+
+        if (tag87 != null && tag87.length() == 2) {
+            appPriorityIndicator = StringUtil.hexStr2Bytes(tag87)[0];
+        }
+
+        return appPriorityIndicator;
+    }
+
+    public String getApplicationLabel(String tag50) {
+        // TODO
+        return tag50;
     }
 }

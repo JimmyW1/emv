@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             var emvParams = EmvParams()
             emvParams.isContact = true;
             emvManager.initEmvFlow(emvParams)
-            var emvHandler = EmvHandler()
+            var emvHandler = EmvHandler(this, emvManager)
             emvManager.startEMVFlow(emvHandler)
         }.subscribe();
 

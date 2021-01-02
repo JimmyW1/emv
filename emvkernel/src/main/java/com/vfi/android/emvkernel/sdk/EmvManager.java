@@ -3,6 +3,7 @@ package com.vfi.android.emvkernel.sdk;
 import com.vfi.android.emvkernel.corelogical.CTLSPreEmvFlow;
 import com.vfi.android.emvkernel.corelogical.ContactEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
+import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
@@ -50,6 +51,10 @@ public final class EmvManager {
 
     public void stopEmvFlow() {
         iEmvOperation.stopEmvFlow();
+    }
+
+    public void importSelectApplication(boolean isCancelled, AppInfo appInfo) {
+        iEmvOperation.importSelectApplication(isCancelled, appInfo);
     }
 
     public void setEmvTag(String tag, String value) {

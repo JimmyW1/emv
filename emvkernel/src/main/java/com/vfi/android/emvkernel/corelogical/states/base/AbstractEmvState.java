@@ -4,8 +4,11 @@ import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.data.beans.ApduCmd;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.beans.EmvTransData;
+import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
+
+import java.util.Iterator;
 
 public abstract class AbstractEmvState implements IEmvState {
     protected final String TAG = TAGS.EMV_STATE;
@@ -53,12 +56,27 @@ public abstract class AbstractEmvState implements IEmvState {
         return emvContext.getCurrentTransData();
     }
 
+    public IEmvHandler getEmvHandler() {
+        return emvContext.getEmvHandler();
+    }
+
     public void addCandidateApplication(EmvApplication emvApplication) {
         if (isDFNameExist(emvApplication.getDfName())) {
             LogUtil.d(TAG, "Skip tag4F[" + emvApplication.getDfName() + "] add to candidate list, exist in candidate now");
         } else {
             LogUtil.d(TAG, "tag4F[" + emvApplication.getDfName() + "] add to candidate list.");
             getEmvTransData().getCandidateList().add(emvApplication);
+        }
+    }
+
+    public void removeCandidateApplication(String dfName) {
+        Iterator<EmvApplication> iterator = getEmvTransData().getCandidateList().iterator();
+        while (iterator.hasNext()) {
+            EmvApplication emvApplication = iterator.next();
+            if (emvApplication.getDfName().equals(dfName)) {
+                iterator.remove();
+                break;
+            }
         }
     }
 
@@ -75,5 +93,9 @@ public abstract class AbstractEmvState implements IEmvState {
         }
 
         return false;
+    }
+
+    protected void setErrorCode(int errorCode) {
+        getEmvTransData().setErrorCode(errorCode);
     }
 }
