@@ -3,12 +3,16 @@ package com.vfi.android.emvkernel.corelogical.states.base;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.data.beans.ApduCmd;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
+import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.data.beans.EmvTransData;
+import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
+import com.vfi.android.libtools.utils.StringUtil;
 
 import java.util.Iterator;
+import java.util.Map;
 
 public abstract class AbstractEmvState implements IEmvState {
     protected final String TAG = TAGS.EMV_STATE;
@@ -56,6 +60,30 @@ public abstract class AbstractEmvState implements IEmvState {
         return emvContext.getCurrentTransData();
     }
 
+    public void initializeTerminalTags() {
+        Map<String, String> tagMap = getEmvTransData().getTagMap();
+        EmvParams emvParams = getEmvContext().getEmvParams();
+
+        if (emvParams.isSupportECash()) {
+            tagMap.put(TerminalTag.E_CASH_INDICATOR, "01");
+        } else {
+            tagMap.put(TerminalTag.E_CASH_INDICATOR, "00");
+        }
+
+        String amount = emvParams.getAmount();
+        if (amount != null && amount.length() > 0) {
+            tagMap.put(TerminalTag.tag9F02, StringUtil.getNonNullStringLeftPadding(amount, 12));
+        } else {
+            tagMap.put(TerminalTag.tag9F02, "000000000000");
+        }
+
+        String transCurrencyCode = emvParams.getTransCurrencyCode();
+        // TODO after select application use emv parameter transaction currency code replace this one.
+        if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
+            tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
+        }
+    }
+
     public IEmvHandler getEmvHandler() {
         return emvContext.getEmvHandler();
     }
@@ -101,6 +129,6 @@ public abstract class AbstractEmvState implements IEmvState {
 
     protected void stopEmv() {
         LogUtil.d(TAG, "stopEmv errorCode=[" + getEmvTransData().getErrorCode() + "]");
-        // TODO
+        jumpToState(EmvStateType.STATE_STOP);
     }
 }

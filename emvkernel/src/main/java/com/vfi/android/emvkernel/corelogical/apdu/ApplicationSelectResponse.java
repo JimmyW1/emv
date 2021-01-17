@@ -76,6 +76,22 @@ public class ApplicationSelectResponse extends ApduResponse {
         return false;
     }
 
+    @Override
+    public void saveTags(Map<String, String> tagMap) {
+        putTag(tagMap, EMVTag.tag6F, tag6F);
+        putTag(tagMap, EMVTag.tag84, tag84);
+        putTag(tagMap, EMVTag.tagA5, tagA5);
+        putTag(tagMap, EMVTag.tag88, tag88);
+        putTag(tagMap, EMVTag.tag5F2D, tag5F2D);
+        putTag(tagMap, EMVTag.tag9F11, tag9F11);
+        putTag(tagMap, EMVTag.tagBF0C, tagBF0C);
+        putTag(tagMap, EMVTag.tag50, tag50);
+        putTag(tagMap, EMVTag.tag87, tag87);
+        putTag(tagMap, EMVTag.tag9F38, tag9F38);
+        putTag(tagMap, EMVTag.tag9F12, tag9F12);
+        putTag(tagMap, EMVTag.tag9F4D, tag9F4D);
+    }
+
     private void printFCIDebugInfo() {
         String hexFCIStr = StringUtil.byte2HexStr(getData());
         Map<String, String> tlvMap = TLVUtil.toTlvMap(hexFCIStr);

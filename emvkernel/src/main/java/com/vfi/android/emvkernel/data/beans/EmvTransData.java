@@ -1,6 +1,9 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.data.consts.TerminalTag;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,13 +12,20 @@ public class EmvTransData {
     private List<Map<String, String>> terminalApplicationMapList;
     private List<String> caPublicKeyList;
     private int errorCode;
+    private Map<String, String> tagMap;
+    private TVR tvr;
+    private TSI tsi;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
+        tagMap = new HashMap<>();
+        tvr = new TVR();
+        tsi = new TSI();
     }
 
     public void resetEmvTransData() {
         candidateList.clear();
+        tagMap.clear();
 
         if (terminalApplicationMapList != null) {
             terminalApplicationMapList.clear();
@@ -24,6 +34,22 @@ public class EmvTransData {
         if (caPublicKeyList != null) {
             caPublicKeyList.clear();
         }
+    }
+
+    public void clearTVRAndTSI() {
+        tvr.clear();
+        tsi.clear();
+
+        updateTVR();
+        updateTSI();
+    }
+
+    public void updateTVR() {
+        tagMap.put(TerminalTag.TVR, tvr.getTVRHex());
+    }
+
+    public void updateTSI() {
+        tagMap.put(TerminalTag.TSI, tsi.getTSIHex());
     }
 
     public List<EmvApplication> getCandidateList() {
@@ -72,5 +98,17 @@ public class EmvTransData {
 
     public void setErrorCode(int errorCode) {
         this.errorCode = errorCode;
+    }
+
+    public Map<String, String> getTagMap() {
+        return tagMap;
+    }
+
+    public TSI getTsi() {
+        return tsi;
+    }
+
+    public TVR getTvr() {
+        return tvr;
     }
 }

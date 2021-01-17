@@ -7,6 +7,8 @@ import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.IEmvState;
 import com.vfi.android.emvkernel.corelogical.states.common.IdleState;
+import com.vfi.android.emvkernel.corelogical.states.common.StopState;
+import com.vfi.android.emvkernel.corelogical.states.contact.ReadCardState;
 import com.vfi.android.emvkernel.corelogical.states.contact.SelectApplicationState;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
@@ -35,6 +37,12 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
                 break;
             case STATE_SELECT_APP:
                 emvState = new SelectApplicationState();
+                break;
+            case STATE_STOP:
+                emvState = new StopState();
+                break;
+            case STATE_READ_CARD:
+                emvState = new ReadCardState();
                 break;
         }
 

@@ -6,10 +6,12 @@ import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartGPO;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartSelectApp;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StopEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
+import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
@@ -162,6 +164,11 @@ public class SelectApplicationState extends AbstractEmvState {
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         if (response.isSuccess()) {
             // TODO set 9F06 equal to tag84
+            getEmvTransData().getTagMap().clear();
+            initializeTerminalTags();
+            response.saveTags(getEmvTransData().getTagMap());
+            jumpToState(STATE_READ_CARD);
+            sendMessage(new Msg_StartGPO());
         } else {
             removeCandidateApplication(dfName);
             selectCandidateApplication(); // select again

@@ -5,6 +5,8 @@ import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
+import java.util.Map;
+
 public class ApduResponse {
     protected final String TAG = TAGS.EMV_COMM;
 
@@ -46,6 +48,17 @@ public class ApduResponse {
      * {@link com.vfi.android.emvkernel.data.consts.EMVResultCode}
      */
     private int errorCode;
+
+    public void saveTags(Map<String, String> tagMap) {
+
+    }
+
+    protected void putTag(Map<String, String> tagMap, String tag, String value) {
+        if (tag != null && tag.length() > 0) {
+            tagMap.put(tag, value);
+            LogUtil.d(TAGS.SAVE_TAG, "putTag tag[" + tag + "]=[" + value + "]");
+        }
+    }
 
     public ApduResponse(byte[] response) {
         LogUtil.d(TAG, "response=[" + StringUtil.byte2HexStr(response) + "]");
