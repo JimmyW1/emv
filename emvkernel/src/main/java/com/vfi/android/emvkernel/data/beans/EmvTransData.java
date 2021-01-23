@@ -45,11 +45,11 @@ public class EmvTransData {
     }
 
     public void updateTVR() {
-        tagMap.put(TerminalTag.TVR, tvr.getTVRHex());
+        tagMap.put(TerminalTag.tag95, tvr.getTVRHex());
     }
 
     public void updateTSI() {
-        tagMap.put(TerminalTag.TSI, tsi.getTSIHex());
+        tagMap.put(TerminalTag.tag9B, tsi.getTSIHex());
     }
 
     public List<EmvApplication> getCandidateList() {

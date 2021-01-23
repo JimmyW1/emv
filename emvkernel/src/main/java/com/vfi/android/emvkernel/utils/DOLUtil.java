@@ -1,26 +1,16 @@
 package com.vfi.android.emvkernel.utils;
 
 import com.vfi.android.emvkernel.data.beans.DOLBean;
-import com.vfi.android.emvkernel.data.consts.TagFormat;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DOLUtil {
     private final static String TAG = TAGS.DOL;
-    private static Map<String, Integer> tagTypeMap = new HashMap<>();
-
-    static {
-        tagTypeMap.put(TerminalTag.E_CASH_INDICATOR, TagFormat.FM_B);
-        tagTypeMap.put(TerminalTag.tag9F02, TagFormat.FM_N);
-        tagTypeMap.put(TerminalTag.tag5F2A, TagFormat.FM_N);
-    }
 
     public static List<DOLBean> toDOLDataList(String dolHexStr) {
         List<DOLBean> dolBeanList = new ArrayList<>();
@@ -87,10 +77,6 @@ public class DOLUtil {
     }
 
     private static int getFormatType(String tag) {
-        if (tagTypeMap.containsKey(tag)) {
-            return tagTypeMap.get(tag);
-        }
-
-        return TagFormat.FM_AN;
+        return TerminalTag.getTagFormat(tag);
     }
 }

@@ -65,9 +65,9 @@ public abstract class AbstractEmvState implements IEmvState {
         EmvParams emvParams = getEmvContext().getEmvParams();
 
         if (emvParams.isSupportECash()) {
-            tagMap.put(TerminalTag.E_CASH_INDICATOR, "01");
+            tagMap.put(TerminalTag.tag9F7A, "01");
         } else {
-            tagMap.put(TerminalTag.E_CASH_INDICATOR, "00");
+            tagMap.put(TerminalTag.tag9F7A, "00");
         }
 
         String amount = emvParams.getAmount();

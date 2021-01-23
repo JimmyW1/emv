@@ -8,10 +8,8 @@ import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFi
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartGPO;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartSelectApp;
-import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StopEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
-import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
@@ -186,7 +184,7 @@ public class SelectApplicationState extends AbstractEmvState {
 
         List<Map<String, String>> terminalApplicationMapList = getEmvTransData().getTerminalApplicationMapList();
         for (Map<String, String> map : terminalApplicationMapList) {
-            String appName = map.get(TerminalTag.AID);
+            String appName = map.get(TerminalTag.tag9F06);
             String asi = map.get(TerminalTag.ASI);
             boolean isFullMatch = (asi == null || !asi.equals("00"));
             ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch);
@@ -252,11 +250,11 @@ public class SelectApplicationState extends AbstractEmvState {
                 Map<String, String> tag61Map = TLVUtil.toTlvMap(tag61);
 
                 for (Map<String, String> map : terminalApplicationMapList) {
-                    if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.AID)) {
+                    if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.tag9F06)) {
                         String asi = map.get(TerminalTag.ASI);
                         boolean isFullMatch = (asi == null || !asi.equals("00"));
                         String tag4F = tag61Map.get(EMVTag.tag4F);
-                        String terminalAid = map.get(TerminalTag.AID);
+                        String terminalAid = map.get(TerminalTag.tag9F06);
                         LogUtil.d(TAG, "==> Tag4F[" + tag4F + "] Terminal AID[" + terminalAid + "] isFullMatch=" + isFullMatch);
 
                         if ((isFullMatch && tag4F.equals(terminalAid)) || (!isFullMatch && tag4F.startsWith(terminalAid))) {

@@ -7,4 +7,6 @@ public class EMVResultCode {
     public static final int ERR_EMPTY_CANDIDATE_LIST = 1004;
     public static final int ERR_CARDHOLDER_CANCELLED_TRANS = 1005;
     public static final int ERR_NOT_SET_EMV_HANDLER = 1006;
+    public static final int ERR_MISSING_AIP_AFL = 1007;
+    public static final int ERR_GPO_FAILED = 1008;
 }
