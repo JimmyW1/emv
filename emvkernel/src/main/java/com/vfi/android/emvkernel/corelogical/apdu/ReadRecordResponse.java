@@ -7,6 +7,7 @@ import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 import com.vfi.android.libtools.utils.TLVUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,19 +17,24 @@ public class ReadRecordResponse extends ApduResponse {
 
     private String tag70;
     private List<String> tag61List;
+    private Map<String, String> tlvMap;
 
-    public ReadRecordResponse(byte[] response) {
+    public ReadRecordResponse(byte[] response, boolean isPSERecord) {
         super(response);
 
         if (isSuccess()) {
             String hexFCIStr = StringUtil.byte2HexStr(getData());
-            Map<String, String> tlvMap = TLVUtil.toTlvMap(hexFCIStr);
+            tlvMap = TLVUtil.toTlvMap(hexFCIStr);
             if (tlvMap.containsKey(EMVTag.tag70)) {
                 tag70 = tlvMap.get(EMVTag.tag70);
                 LogUtil.d(TAG, "tag70=" + tag70);
 
-                tag61List = TLVUtil.getTagList(tag70, EMVTag.tag61);
-                printDebugInfoTag61List(tag61List);
+                if (isPSERecord) {
+                    tag61List = TLVUtil.getTagList(tag70, EMVTag.tag61);
+                    printDebugInfoTag61List(tag61List);
+                } else {
+                    tag61List = new ArrayList<>();
+                }
             }
         } else if (getStatus() != null) {
             switch (getStatus()) {
@@ -47,6 +53,18 @@ public class ReadRecordResponse extends ApduResponse {
 
     public List<String> getTag61List() {
         return tag61List;
+    }
+
+    @Override
+    public void saveTags(Map<String, String> tagMap) {
+        if (tlvMap != null && tlvMap.size() > 0) {
+            for (String key : tlvMap.keySet()) {
+                String tagValue = tlvMap.get(key);
+                if (!EMVTag.tag70.equals(key)) {
+                    putTag(tagMap, key, tagValue);
+                }
+            }
+        }
     }
 
     private void printDebugInfoTag61List(List<String> tag61List) {

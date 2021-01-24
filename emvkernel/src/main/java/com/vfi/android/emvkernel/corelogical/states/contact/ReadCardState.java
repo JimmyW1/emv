@@ -5,12 +5,15 @@ import com.vfi.android.emvkernel.corelogical.apdu.GetProcessingOptionsResponse;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_ReSelectAppFromCandidateList;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartGPO;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
+import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.beans.DOLBean;
+import com.vfi.android.emvkernel.data.consts.SW12;
 import com.vfi.android.emvkernel.utils.DOLUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
@@ -54,18 +57,67 @@ public class ReadCardState extends AbstractEmvState {
 
                 for (int recordNum = startRecordNum; recordNum <= endRecordNum; recordNum++) {
                     retData = executeApduCmd(new ReadRecordCmd(sfi, (byte) recordNum));
-                    ReadRecordResponse readRecordResponse = new ReadRecordResponse(retData);
-                    if (numOfOfflineDataRecords > 0 && recordNum < startRecordNum + numOfOfflineDataRecords) {
-                        LogUtil.d(TAG, "save offline data authentication sfi=[" + sfi + "] recordNum=[" + recordNum + "]");
-                        offlineDataAuthRecordList.add(readRecordResponse);
-                    } else {
+                    ReadRecordResponse readRecordResponse = new ReadRecordResponse(retData, true);
+                    if (readRecordResponse.isSuccess()) {
+                        if (numOfOfflineDataRecords > 0 && recordNum < startRecordNum + numOfOfflineDataRecords) {
+                            LogUtil.d(TAG, "save offline data authentication sfi=[" + sfi + "] recordNum=[" + recordNum + "]");
+                            offlineDataAuthRecordList.add(readRecordResponse);
+                        }
                         readRecordResponse.saveTags(getEmvTransData().getTagMap());
+                    } else {
+                        LogUtil.d(TAG, "Error: Read record error[" + readRecordResponse.getStatus() + "] recordNum=[" + recordNum + "]");
+                        setErrorCode(EMVResultCode.ERR_READ_RECORD_FAILED);
+                        stopEmv();
+                        return;
                     }
                 }
             }
+
+            if (checkIfMissingMandatoryData()) {
+                setErrorCode(EMVResultCode.ERR_MISSING_MANDATORY_DATA);
+                stopEmv();
+            } else {
+                // TODO
+            }
+        } else if (SW12.ERR_CONDITION_NOT_SATISFIED.equals(response.getStatus())
+                && getEmvTransData().getCandidateList().size() > 1) {
+            LogUtil.d(TAG, "Error: GPO condition not satisfied, back to select Application again");
+            removeCandidateApplication(getEmvTransData().getTagMap().get(EMVTag.tag84));
+            jumpToState(EmvStateType.STATE_SELECT_APP);
+            sendMessage(new Msg_ReSelectAppFromCandidateList());
         } else {
+            LogUtil.d(TAG, "Error: GPO failed[" + response.getStatus() + "]");
+            setErrorCode(EMVResultCode.ERR_GPO_FAILED);
             stopEmv();
         }
+    }
+
+    private boolean checkIfMissingMandatoryData() {
+        boolean isMissingMandatoryData = false;
+
+        Map<String, String> tagMap = getEmvTransData().getTagMap();
+        if (!tagMap.containsKey(EMVTag.tag5F24)) {
+            LogUtil.d(TAG, "Error: Missing Mandatory tag 5F24 (Expiration Date)");
+            isMissingMandatoryData = true;
+        }
+
+        if (!tagMap.containsKey(EMVTag.tag5A)) {
+            LogUtil.d(TAG, "Error: Missing Mandatory tag 5A (PAN)");
+            isMissingMandatoryData = true;
+        }
+
+        if (!tagMap.containsKey(EMVTag.tag8C)) {
+            LogUtil.d(TAG, "Error: Missing Mandatory tag 8C (CDOL1)");
+            isMissingMandatoryData = true;
+        }
+
+        if (!tagMap.containsKey(EMVTag.tag8D)) {
+            LogUtil.d(TAG, "Error: Missing Mandatory tag 8D (CDOL2)");
+            isMissingMandatoryData = true;
+        }
+
+        LogUtil.d(TAG, "isMissingMandatoryData=[" + isMissingMandatoryData + "]");
+        return isMissingMandatoryData;
     }
 
     private String getPDOLData() {

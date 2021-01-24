@@ -9,4 +9,6 @@ public class EMVResultCode {
     public static final int ERR_NOT_SET_EMV_HANDLER = 1006;
     public static final int ERR_MISSING_AIP_AFL = 1007;
     public static final int ERR_GPO_FAILED = 1008;
+    public static final int ERR_READ_RECORD_FAILED = 1009;
+    public static final int ERR_MISSING_MANDATORY_DATA = 1010;
 }

@@ -54,7 +54,7 @@ public class ApduResponse {
     }
 
     protected void putTag(Map<String, String> tagMap, String tag, String value) {
-        if (tag != null && tag.length() > 0) {
+        if (tag != null && tag.length() > 0 && value != null && value.length() > 0) {
             tagMap.put(tag, value);
             LogUtil.d(TAGS.SAVE_TAG, "putTag tag[" + tag + "]=[" + value + "]");
         }

@@ -23,8 +23,8 @@ public class GetProcessingOptionsResponse extends ApduResponse {
                 int AIPLen = 2;
                 String AIP_AFL = tlvMap.get(EMVTag.tag80);
                 if (AIP_AFL.length() > AIPLen) {
-                    AIP = AIP_AFL.substring(0, AIPLen*2);
-                    AFL = AIP_AFL.substring(AIPLen*2);
+                    AIP = AIP_AFL.substring(0, AIPLen * 2);
+                    AFL = AIP_AFL.substring(AIPLen * 2);
                     LogUtil.d(TAG, "AIP=[" + AIP + "]");
                     LogUtil.d(TAG, "AFL=[" + AFL + "]");
                 } else {
@@ -45,7 +45,7 @@ public class GetProcessingOptionsResponse extends ApduResponse {
                 }
             } else {
                 setSuccess(false);
-                LogUtil.d(TAG, "Error: Wrong GPO Response=[" + dataHex +"]");
+                LogUtil.d(TAG, "Error: Wrong GPO Response=[" + dataHex + "]");
                 setErrorCode(EMVResultCode.ERR_GPO_FAILED);
             }
         } else {

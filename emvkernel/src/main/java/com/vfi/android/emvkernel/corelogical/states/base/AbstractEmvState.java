@@ -1,6 +1,7 @@
 package com.vfi.android.emvkernel.corelogical.states.base;
 
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StopEmv;
 import com.vfi.android.emvkernel.data.beans.ApduCmd;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
@@ -130,5 +131,6 @@ public abstract class AbstractEmvState implements IEmvState {
     protected void stopEmv() {
         LogUtil.d(TAG, "stopEmv errorCode=[" + getEmvTransData().getErrorCode() + "]");
         jumpToState(EmvStateType.STATE_STOP);
+        sendMessage(new Msg_StopEmv());
     }
 }

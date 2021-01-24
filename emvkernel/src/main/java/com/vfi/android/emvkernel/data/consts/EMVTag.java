@@ -51,5 +51,7 @@ public class EMVTag {
     public final static String tag9F3B = "9F3B"; // Application Reference Currency n 3 length 2-8 . Template 70 or 77 - 1-4 currency codes used between the terminal and the ICC when the Transaction Currency Code is different from the Application Currency code; each code is 3 digits according to ISO 4217
     public final static String tag9F43 = "9F43"; // Application Reference Currency Exponent n 1 length 1-4 . Template 70 or 77 - Indicates the implied position of the decimal point from the right of the amount, for each of the 1-4 reference currencies represented according to ISO 4217
 
+    public final static String tag8C = "8C"; //
+    public final static String tag8D = "8D"; //
 
 }

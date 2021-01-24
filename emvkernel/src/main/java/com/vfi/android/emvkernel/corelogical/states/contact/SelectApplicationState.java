@@ -6,6 +6,7 @@ import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_ReSelectAppFromCandidateList;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartGPO;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartSelectApp;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
@@ -41,6 +42,10 @@ public class SelectApplicationState extends AbstractEmvState {
             processStartSelectAppMessage(message);
         } else if (message instanceof Msg_CardHolderSelectFinished) {
             processCardHolderSelectFinishedMessage(message);
+        } else if (message instanceof Msg_ReSelectAppFromCandidateList) {
+            selectCandidateApplication();
+        } else {
+            LogUtil.d(TAG, "Message[" + message.getMessageType() + "] is not desired by current state[" + getStateType() + "]" );
         }
     }
 
@@ -228,7 +233,7 @@ public class SelectApplicationState extends AbstractEmvState {
 
         for(int recordNum = 1; recordNum < 256; recordNum++) {
             byte[] retData = executeApduCmd(new ReadRecordCmd(sfi, (byte) recordNum));
-            ReadRecordResponse response = new ReadRecordResponse(retData);
+            ReadRecordResponse response = new ReadRecordResponse(retData, false);
             if (response.isNoRecord()) {
                 break;
             }

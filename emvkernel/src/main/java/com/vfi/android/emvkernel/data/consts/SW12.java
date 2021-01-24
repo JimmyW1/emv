@@ -7,6 +7,7 @@ public class SW12 {
     public static final String ERR_DF_NOT_FOUND = "6A82";
     public static final String ERR_NO_RECORD = "6A83";
     public static final String ERR_DF_BLOCKED = "6283";
+    public static final String ERR_CONDITION_NOT_SATISFIED = "6985";
 
     public static final String OPFAIL_INCORRECT_PARAM = "6A86";
     public static final String OPFAIL_FILE_FULL       = "6A84";

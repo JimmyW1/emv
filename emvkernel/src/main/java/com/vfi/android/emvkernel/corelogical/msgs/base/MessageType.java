@@ -5,6 +5,7 @@ public class MessageType {
     public static final String MSG_START_SELECT_APP = "MSG_START_SELECT_APP";
     public static final String MSG_STOP_EMV = "MSG_STOP_EMV";
     public static final String MSG_START_GPO = "MSG_START_GPO";
+    public static final String MSG_RESELECT_APP_FROM_CANDIDATE_LIST = "MSG_RESELECT_APP_FROM_CANDIDATE_LIST";
 
     // app messages
     public static final String MSG_START_CARDHOLDER_SELECT = "MSG_START_CARDHOLDER_SELECT";
