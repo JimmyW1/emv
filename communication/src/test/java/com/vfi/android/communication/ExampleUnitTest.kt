@@ -1,5 +1,6 @@
 package com.vfi.android.communication
 
+import com.vfi.android.libtools.utils.LogUtil
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -12,6 +13,9 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+       var a = 0x81;
+        var b = 0x7F;
+        var c = a and b;
+        System.out.println("c=" + c)
     }
 }

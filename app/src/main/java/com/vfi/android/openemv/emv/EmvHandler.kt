@@ -7,6 +7,8 @@ import androidx.appcompat.app.AlertDialog
 import com.vfi.android.emvkernel.data.beans.*
 import com.vfi.android.emvkernel.interfaces.IEmvHandler
 import com.vfi.android.emvkernel.sdk.EmvManager
+import com.vfi.android.libtools.consts.TAGS
+import com.vfi.android.libtools.utils.LogUtil
 
 class EmvHandler : IEmvHandler {
     private var emvManager:EmvManager;
@@ -60,7 +62,10 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onConfirmCardInfo(info: CardInfo?) {
-        TODO("Not yet implemented")
+        LogUtil.d(TAGS.EMV_FLOW, "onConfirmCardInfo")
+
+        LogUtil.d(TAGS.EMV_FLOW, "CardInfo=[" + info.toString() + "]")
+        emvManager.importCardConfirmResult(true)
     }
 
     override fun onRequestOfflinePIN(retryTimes: Int) {

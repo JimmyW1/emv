@@ -1,5 +1,6 @@
 package com.vfi.android.emvkernel.corelogical;
 
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderConfirm;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
@@ -8,6 +9,8 @@ import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.IEmvState;
 import com.vfi.android.emvkernel.corelogical.states.common.IdleState;
 import com.vfi.android.emvkernel.corelogical.states.common.StopState;
+import com.vfi.android.emvkernel.corelogical.states.contact.CardConfirmState;
+import com.vfi.android.emvkernel.corelogical.states.contact.OfflineDataAuthenticationState;
 import com.vfi.android.emvkernel.corelogical.states.contact.ReadCardState;
 import com.vfi.android.emvkernel.corelogical.states.contact.SelectApplicationState;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
@@ -44,6 +47,12 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
             case STATE_READ_CARD:
                 emvState = new ReadCardState();
                 break;
+            case STATE_CARD_CONFIRM:
+                emvState = new CardConfirmState();
+                break;
+            case STATE_OFFLINE_DATA_AUTHENTICATION:
+                emvState = new OfflineDataAuthenticationState();
+                break;
         }
 
         if (emvState != null) {
@@ -74,5 +83,10 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
     @Override
     public void importSelectApplication(boolean isCancelled, AppInfo appInfo) {
         sendMessage(new Msg_CardHolderSelectFinished(isCancelled, appInfo.getAid()));
+    }
+
+    @Override
+    public void importCardConfirmResult(boolean pass) {
+        sendMessage(new Msg_CardHolderConfirm(!pass));
     }
 }

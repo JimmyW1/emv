@@ -5,4 +5,6 @@ public class EmvStateType {
     public static final String STATE_SELECT_APP = "STATE_SELECT_APP";
     public static final String STATE_STOP = "STATE_STOP";
     public static final String STATE_READ_CARD = "STATE_READ_CARD";
+    public static final String STATE_CARD_CONFIRM = "STATE_CARD_CONFIRM";
+    public static final String STATE_OFFLINE_DATA_AUTHENTICATION = "STATE_OFFLINE_DATA_AUTHENTICATION";
 }

@@ -11,6 +11,10 @@ public class EmvParams {
     private List<CTLSKernelIndicator> ctlsKernelIndicatorList;
     private String amount; // Authorised amount 9F02
     private String transCurrencyCode; // Transaction Currency Code 5F2A
+    /**
+     * This is used for response tags in confirm card info {@link CardInfo}
+     */
+    private List<String> cardConfirmTagList;
 
     /**
      * PBOC parameters
@@ -78,5 +82,13 @@ public class EmvParams {
 
     public void setTransCurrencyCode(String transCurrencyCode) {
         this.transCurrencyCode = transCurrencyCode;
+    }
+
+    public List<String> getCardConfirmTagList() {
+        return cardConfirmTagList;
+    }
+
+    public void setCardConfirmTagList(List<String> cardConfirmTagList) {
+        this.cardConfirmTagList = cardConfirmTagList;
     }
 }

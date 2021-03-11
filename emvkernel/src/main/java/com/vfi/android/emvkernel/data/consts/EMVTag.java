@@ -54,4 +54,29 @@ public class EMVTag {
     public final static String tag8C = "8C"; //
     public final static String tag8D = "8D"; //
 
+    public final static String tag9F1F = "9F1F"; // Track 1 Discretionary Data, Discretionary part of track 1 according to ISO/IEC 7813, ans, Template 70 or 77 , var
+    public final static String tag9F20 = "9F20"; // Track 2 Discretionary Data, Discretionary part of track 2 according to ISO/IEC 7813, ans, Template 70 or 77 , var
+    /**
+     * TAG 57 - Track 2 Equivalent Data
+     * Contains the data elements of track 2
+     * according to ISO/IEC 7813, excluding start
+     * sentinel, end sentinel, and Longitudinal
+     * Redundancy Check (LRC), as follows:
+     * ICC b '70' or '77' '57' var. up
+     * to 19
+     * Primary Account Number n, var. up
+     * to 19
+     * Field Separator (Hex 'D') b
+     * Expiration Date (YYMM) n 4
+     * Service Code n 3
+     * Discretionary Data (defined by individual
+     * payment systems)
+     * n, var.
+     * Pad with one Hex 'F' if needed to ensure
+     * whole bytes
+     */
+    public final static String tag57 = "57"; // format b, n var up to 19, Template 70 or 77
+
+
+
 }

@@ -11,4 +11,5 @@ public class EMVResultCode {
     public static final int ERR_GPO_FAILED = 1008;
     public static final int ERR_READ_RECORD_FAILED = 1009;
     public static final int ERR_MISSING_MANDATORY_DATA = 1010;
+    public static final int ERR_CARD_HOLDER_CANCELLED = 1011;
 }

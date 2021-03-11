@@ -10,6 +10,7 @@ public interface IEmvOperation {
     void startEMVFlow(IEmvHandler emvHandler);
     void stopEmvFlow();
     void importSelectApplication(boolean isCancelled, AppInfo appInfo);
+    void importCardConfirmResult(boolean pass);
     void setEmvTag(String tag, String value);
     String getEmvTag(String tag);
     String getEmvTags(List<String> tagList);

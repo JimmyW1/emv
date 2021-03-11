@@ -41,4 +41,9 @@ public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
     public void importSelectApplication(boolean isCancelled, AppInfo appInfo) {
 
     }
+
+    @Override
+    public void importCardConfirmResult(boolean pass) {
+
+    }
 }

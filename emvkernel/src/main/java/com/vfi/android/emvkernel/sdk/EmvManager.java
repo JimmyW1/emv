@@ -57,6 +57,10 @@ public final class EmvManager {
         iEmvOperation.importSelectApplication(isCancelled, appInfo);
     }
 
+    public void importCardConfirmResult(boolean pass) {
+        iEmvOperation.importCardConfirmResult(pass);
+    }
+
     public void setEmvTag(String tag, String value) {
         iEmvOperation.setEmvTag(tag, value);
     }

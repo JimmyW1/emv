@@ -6,6 +6,7 @@ import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_ReSelectAppFromCandidateList;
+import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartCardConfirm;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartGPO;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
@@ -32,6 +33,7 @@ public class ReadCardState extends AbstractEmvState {
         super.run(context);
 
         Message message = context.getMessage();
+        LogUtil.d(TAG, "ReadCardState msgType=" + message.getMessageType());
         if (message instanceof Msg_StartGPO) {
             processStartGetProcessingOptionsMessage(message);
         }
@@ -78,6 +80,8 @@ public class ReadCardState extends AbstractEmvState {
                 stopEmv();
             } else {
                 // TODO
+                jumpToState(EmvStateType.STATE_CARD_CONFIRM);
+                sendMessage(new Msg_StartCardConfirm());
             }
         } else if (SW12.ERR_CONDITION_NOT_SATISFIED.equals(response.getStatus())
                 && getEmvTransData().getCandidateList().size() > 1) {
