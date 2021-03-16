@@ -39,6 +39,8 @@ public class CardConfirmState extends AbstractEmvState {
         cardInfo.setPan(tagMap.get(EMVTag.tag5A));
         cardInfo.setTrack1(tagMap.get(EMVTag.tag9F1F));
         cardInfo.setTrack2(tagMap.get(EMVTag.tag57));
+        cardInfo.setServiceCode(tagMap.get(EMVTag.tag5F30));
+        cardInfo.setExpiredDate(tagMap.get(EMVTag.tag5F24));
         cardInfo.setCardSequenceNum(tagMap.get(EMVTag.tag5F34));
         getEmvHandler().onConfirmCardInfo(cardInfo);
     }

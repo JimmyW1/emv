@@ -51,13 +51,6 @@ public class CardInfo {
     public void setTrack2(String track2) {
         LogUtil.d(TAG, "track2=[" + track2 + "]");
         this.track2 = track2;
-        if (track2 != null && (track2.contains("D"))) {
-            String subString = track2.substring(track2.indexOf("D") + 1);
-            serviceCode = subString.substring(0, 4);
-            expiredDate = subString.substring(4, 7);
-            LogUtil.d(TAG, "serviceCode=[" + serviceCode + "]");
-            LogUtil.d(TAG, "expiredDate=[" + expiredDate + "]");
-        }
     }
 
     public String getTrack3() {
@@ -83,6 +76,16 @@ public class CardInfo {
     public void setCardSequenceNum(String cardSequenceNum) {
         LogUtil.d(TAG, "cardSequenceNum=[" + cardSequenceNum + "]");
         this.cardSequenceNum = cardSequenceNum;
+    }
+
+    public void setServiceCode(String serviceCode) {
+        LogUtil.d(TAG, "serviceCode=[" + serviceCode + "]");
+        this.serviceCode = serviceCode;
+    }
+
+    public void setExpiredDate(String expiredDate) {
+        LogUtil.d(TAG, "expiredDate=[" + expiredDate + "]");
+        this.expiredDate = expiredDate;
     }
 
     @Override

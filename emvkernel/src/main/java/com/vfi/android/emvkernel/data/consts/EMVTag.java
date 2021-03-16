@@ -76,6 +76,7 @@ public class EMVTag {
      * whole bytes
      */
     public final static String tag57 = "57"; // format b, n var up to 19, Template 70 or 77
+    public final static String tag5F30 = "5F30";
 
 
 
