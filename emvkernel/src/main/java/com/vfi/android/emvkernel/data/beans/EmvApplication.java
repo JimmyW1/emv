@@ -12,11 +12,16 @@ public class EmvApplication {
      *          xxxx    (except * 0000) Order in which the application is to be listed or selected, ranging from 1–15, with 1 being highest priority
      */
     private byte appPriorityIndicator; // tag87
+    /**
+     * Save terminal AID tags map index
+     */
+    private int terminalParameterIndex;
 
-    public EmvApplication(String dfName, String label, byte appPriorityIndicator) {
+    public EmvApplication(String dfName, String label, byte appPriorityIndicator, int terminalParameterIndex) {
         this.dfName = dfName;
         this.label = label;
         this.appPriorityIndicator = appPriorityIndicator;
+        this.terminalParameterIndex = terminalParameterIndex;
     }
 
     public boolean isAutoSelect() {
@@ -45,5 +50,13 @@ public class EmvApplication {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public int getTerminalParameterIndex() {
+        return terminalParameterIndex;
+    }
+
+    public void setTerminalParameterIndex(int terminalParameterIndex) {
+        this.terminalParameterIndex = terminalParameterIndex;
     }
 }

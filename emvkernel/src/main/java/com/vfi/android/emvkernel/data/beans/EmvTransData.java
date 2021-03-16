@@ -10,6 +10,7 @@ import java.util.Map;
 public class EmvTransData {
     private List<EmvApplication> candidateList;
     private List<Map<String, String>> terminalApplicationMapList;
+    private Map<String, String> selectAppTerminalParamsMap;
     private List<String> caPublicKeyList;
     private int errorCode;
     private Map<String, String> tagMap;
@@ -110,5 +111,13 @@ public class EmvTransData {
 
     public TVR getTvr() {
         return tvr;
+    }
+
+    public Map<String, String> getSelectAppTerminalParamsMap() {
+        return selectAppTerminalParamsMap;
+    }
+
+    public void setSelectAppTerminalParamsMap(Map<String, String> selectAppTerminalParamsMap) {
+        this.selectAppTerminalParamsMap = selectAppTerminalParamsMap;
     }
 }

@@ -14,6 +14,7 @@ import com.vfi.android.emvkernel.corelogical.states.contact.OfflineDataAuthentic
 import com.vfi.android.emvkernel.corelogical.states.contact.ReadCardState;
 import com.vfi.android.emvkernel.corelogical.states.contact.SelectApplicationState;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
+import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
@@ -82,7 +83,11 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
 
     @Override
     public void importSelectApplication(boolean isCancelled, AppInfo appInfo) {
-        sendMessage(new Msg_CardHolderSelectFinished(isCancelled, appInfo.getAid()));
+        for (EmvApplication emvApplication : getEmvContext().getCurrentTransData().getCandidateList()) {
+            if (emvApplication.getDfName().equals(appInfo.getAid())) {
+                sendMessage(new Msg_CardHolderSelectFinished(isCancelled, emvApplication));
+            }
+        }
     }
 
     @Override

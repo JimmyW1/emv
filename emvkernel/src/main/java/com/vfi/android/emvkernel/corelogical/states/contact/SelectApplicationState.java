@@ -92,7 +92,7 @@ public class SelectApplicationState extends AbstractEmvState {
             setErrorCode(EMVResultCode.ERR_CARDHOLDER_CANCELLED_TRANS);
             stopEmv();
         } else {
-            doFinalSelectProcess(msg.getSelectedDfName());
+            doFinalSelectProcess(msg.getEmvApplication());
         }
     }
 
@@ -104,7 +104,7 @@ public class SelectApplicationState extends AbstractEmvState {
         } else if (candidateAppList.size() == 1){
             EmvApplication emvApplication = getEmvTransData().getCandidateList().get(0);
             if (emvApplication.isAutoSelect()) {
-                doFinalSelectProcess(emvApplication.getDfName());
+                doFinalSelectProcess(emvApplication);
             } else if (!getEmvContext().getEmvParams().isSupportCardHolderSelect()){
                 setErrorCode(EMVResultCode.ERR_NOT_SUPPORT_CARDHOLDER_SELECT);
                 stopEmv();
@@ -141,33 +141,35 @@ public class SelectApplicationState extends AbstractEmvState {
 
     private void autoSelectEmvApplication() {
         List<EmvApplication> emvApplicationList = getEmvTransData().getCandidateList();
-        String highestPriorityDfName = null;
+        EmvApplication highestPriorityApplication = null;
         byte highestPriority = '0';
 
         for (EmvApplication emvApplication : emvApplicationList) {
             if (!emvApplication.isAutoSelect()) {
                 continue;
-            } else if (highestPriorityDfName == null || emvApplication.getAppPriorityIndicator() < highestPriority){
-                highestPriorityDfName = emvApplication.getDfName();
+            } else if (highestPriorityApplication == null || emvApplication.getAppPriorityIndicator() < highestPriority){
+                highestPriorityApplication = emvApplication;
                 highestPriority = emvApplication.getAppPriorityIndicator();
             }
         }
 
-        LogUtil.d(TAG, "autoSelectEmvApplication dfName=[" + highestPriorityDfName + "]");
-        if (highestPriorityDfName == null) {
+        LogUtil.d(TAG, "autoSelectEmvApplication dfName=[" + highestPriorityApplication.getDfName() + "]");
+        if (highestPriorityApplication == null) {
             setErrorCode(EMVResultCode.ERR_NOT_SUPPORT_CARDHOLDER_SELECT);
             stopEmv();
         } else {
-            doFinalSelectProcess(highestPriorityDfName);
+            doFinalSelectProcess(highestPriorityApplication);
         }
     }
 
-    private void doFinalSelectProcess(String dfName) {
+    private void doFinalSelectProcess(EmvApplication emvApplication) {
+        String dfName = emvApplication.getDfName();
         byte[] retData = executeApduCmd(new ApplicationSelectCmd(true, dfName));
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         if (response.isSuccess()) {
             // TODO set 9F06 equal to tag84
             getEmvTransData().getTagMap().clear();
+            getEmvTransData().setSelectAppTerminalParamsMap(getEmvTransData().getTerminalApplicationMapList().get(emvApplication.getTerminalParameterIndex()));
             initializeTerminalTags();
             response.saveTags(getEmvTransData().getTagMap());
             jumpToState(STATE_READ_CARD);
@@ -188,11 +190,12 @@ public class SelectApplicationState extends AbstractEmvState {
         clearCandidateList();
 
         List<Map<String, String>> terminalApplicationMapList = getEmvTransData().getTerminalApplicationMapList();
-        for (Map<String, String> map : terminalApplicationMapList) {
+        for (int i = 0; i < terminalApplicationMapList.size(); i++) {
+            Map<String, String> map = terminalApplicationMapList.get(i);
             String appName = map.get(TerminalTag.tag9F06);
             String asi = map.get(TerminalTag.ASI);
             boolean isFullMatch = (asi == null || !asi.equals("00"));
-            ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch);
+            ApplicationSelectResponse response = selectWithADF(true, appName, isFullMatch, i);
             if (response.isNeedTerminate()) {
                 setErrorCode(response.getErrorCode());
                 stopEmv();
@@ -201,7 +204,7 @@ public class SelectApplicationState extends AbstractEmvState {
         }
     }
 
-    private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch) {
+    private ApplicationSelectResponse selectWithADF(boolean isSelectFirst, String appName, boolean isFullMatch, int terminalParameterIndex) {
         byte[] retData = executeApduCmd(new ApplicationSelectCmd(isSelectFirst, appName));
         ApplicationSelectResponse response = new ApplicationSelectResponse(retData);
         if (response.isSuccess() || response.isApplicationBlocked()) {
@@ -211,12 +214,12 @@ public class SelectApplicationState extends AbstractEmvState {
             if (dfName.startsWith(appName)) {
                 if (!response.isApplicationBlocked()) {
                     if (applicationLabel != null && applicationLabel.length() > 0) {
-                        addCandidateApplication(new EmvApplication(dfName, applicationLabel, getAppPriorityIndicator(response.getTag87())));
+                        addCandidateApplication(new EmvApplication(dfName, applicationLabel, getAppPriorityIndicator(response.getTag87()), terminalParameterIndex));
                     }
                 }
 
                 if (!isFullMatch && appName.length() != dfName.length()){
-                    return selectWithADF(false, appName, false);
+                    return selectWithADF(false, appName, false, terminalParameterIndex);
                 }
             } else {
                 // no happened.
@@ -254,7 +257,8 @@ public class SelectApplicationState extends AbstractEmvState {
             for (String tag61 : response.getTag61List()) {
                 Map<String, String> tag61Map = TLVUtil.toTlvMap(tag61);
 
-                for (Map<String, String> map : terminalApplicationMapList) {
+                for (int i = 0; i < terminalApplicationMapList.size(); i++) {
+                    Map<String, String> map  = terminalApplicationMapList.get(i);
                     if (tag61Map.containsKey(EMVTag.tag4F) && map.containsKey(TerminalTag.tag9F06)) {
                         String asi = map.get(TerminalTag.ASI);
                         boolean isFullMatch = (asi == null || !asi.equals("00"));
@@ -267,7 +271,7 @@ public class SelectApplicationState extends AbstractEmvState {
                                 byte appPriorityIndicator = getAppPriorityIndicator(tag61Map.get(EMVTag.tag87));
                                 String applicationLabel = getApplicationLabel(tag61Map.get(EMVTag.tag50));
                                 if (applicationLabel != null && applicationLabel.length() > 0) {
-                                    EmvApplication emvApplication = new EmvApplication(tag4F, applicationLabel, appPriorityIndicator);
+                                    EmvApplication emvApplication = new EmvApplication(tag4F, applicationLabel, appPriorityIndicator, i);
                                     addCandidateApplication(emvApplication);
                                 }
                             }
