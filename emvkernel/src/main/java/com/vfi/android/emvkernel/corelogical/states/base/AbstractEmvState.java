@@ -12,7 +12,9 @@ import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractEmvState implements IEmvState {
@@ -82,6 +84,15 @@ public abstract class AbstractEmvState implements IEmvState {
         // TODO after select application use emv parameter transaction currency code replace this one.
         if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
             tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
+        }
+
+        // put selected terminal TAGS to current tag Map
+        Map<String, String> selectAppTerminalParamsMap = getEmvTransData().getSelectAppTerminalParamsMap();
+        List<String> terminalTagList = Arrays.asList(TerminalTag.tag9F33);
+        for (String tag : terminalTagList) {
+            if (selectAppTerminalParamsMap.containsKey(tag)) {
+                tagMap.put(tag, selectAppTerminalParamsMap.get(tag));
+            }
         }
     }
 

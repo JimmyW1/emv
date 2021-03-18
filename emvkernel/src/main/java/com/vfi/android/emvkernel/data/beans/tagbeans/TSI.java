@@ -1,4 +1,4 @@
-package com.vfi.android.emvkernel.data.beans;
+package com.vfi.android.emvkernel.data.beans.tagbeans;
 
 import com.vfi.android.libtools.utils.StringUtil;
 

@@ -108,6 +108,10 @@ public class TLVUtil {
                 LogUtil.d(TAG, "lenByteCount=" + lenByteCount);
             }
 
+            if (lenByteCount == 0) {
+                break;
+            }
+
             if (isMoreByteLen) {
                 i += 1;
                 len = Integer.parseInt(StringUtil.byte2HexStr(tlvStrBytes, i, lenByteCount), 16);
@@ -185,6 +189,10 @@ public class TLVUtil {
                 tlvStrBytes[i] &= 0x7F;
                 lenByteCount = Integer.parseInt(StringUtil.byte2HexStr(tlvStrBytes, i, 1), 16);
                 LogUtil.d(TAG, "lenByteCount=" + lenByteCount);
+            }
+
+            if (lenByteCount == 0) {
+                break;
             }
 
             if (isMoreByteLen) {

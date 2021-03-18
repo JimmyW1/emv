@@ -170,6 +170,7 @@ public class SelectApplicationState extends AbstractEmvState {
             // TODO set 9F06 equal to tag84
             getEmvTransData().getTagMap().clear();
             getEmvTransData().setSelectAppTerminalParamsMap(getEmvTransData().getTerminalApplicationMapList().get(emvApplication.getTerminalParameterIndex()));
+            printDebugAppTerminalParams();
             initializeTerminalTags();
             response.saveTags(getEmvTransData().getTagMap());
             jumpToState(STATE_READ_CARD);
@@ -178,6 +179,14 @@ public class SelectApplicationState extends AbstractEmvState {
             removeCandidateApplication(dfName);
             selectCandidateApplication(); // select again
         }
+    }
+
+    private void printDebugAppTerminalParams() {
+        LogUtil.d(TAG, "=============printDebugAppTerminalParams Start===============");
+        for (String tag : getEmvTransData().getSelectAppTerminalParamsMap().keySet()) {
+            LogUtil.d(TAG, "TAG[" + tag + "]=[" + getEmvTransData().getSelectAppTerminalParamsMap().get(tag) + "]");
+        }
+        LogUtil.d(TAG, "=============printDebugAppTerminalParams   End===============");
     }
 
     private ApplicationSelectResponse trySelectWithPSE() {

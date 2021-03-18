@@ -1,5 +1,7 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
+import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 
 import java.util.ArrayList;
@@ -14,14 +16,14 @@ public class EmvTransData {
     private List<String> caPublicKeyList;
     private int errorCode;
     private Map<String, String> tagMap;
-    private TVR tvr;
-    private TSI tsi;
+    private com.vfi.android.emvkernel.data.beans.tagbeans.TVR tvr;
+    private com.vfi.android.emvkernel.data.beans.tagbeans.TSI tsi;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
         tagMap = new HashMap<>();
-        tvr = new TVR();
-        tsi = new TSI();
+        tvr = new com.vfi.android.emvkernel.data.beans.tagbeans.TVR();
+        tsi = new com.vfi.android.emvkernel.data.beans.tagbeans.TSI();
     }
 
     public void resetEmvTransData() {

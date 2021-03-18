@@ -37,12 +37,103 @@ public class TerminalTag {
     public final static String DEFAULT_TAC = "DEFAULT_TAC"; // Terminal Action Code - Default b length 5 - Specifies the acquirer's conditions that cause a transaction to be rejected if it might have been approved online, but the terminal is unable to process the transaction online
     public final static String DENIAL_TAC = "DENIAL_TAC"; // Terminal Action Code - Denial b length 5 - Specifies the acquirer's conditions that cause the denial of a transaction without attempt to go online
     public final static String ONLINE_TAC = "ONLINE_TAC"; // Terminal Action Code - Online b length 5 - Specifies the acquirer's conditions that cause the denial of a transaction to be transmitted online
+    /**
+     * Byte 1: Card Data Input Capability
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Manual key entry
+     * x 1 x x x x x x Magnetic stripe
+     * x x 1 x x x x x IC with contacts
+     * x x x 0 x x x x RFU
+     * x x x x 0 x x x RFU
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * Byte 2: CVM Capability
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Plaintext PIN for ICC verification
+     * x 1 x x x x x x Enciphered PIN for online verification
+     * x x 1 x x x x x Signature (paper)
+     * x x x 1 x x x x Enciphered PIN for offline verification
+     * x x x x 1 x x x No CVM Required
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * Byte 3: Security Capability
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x SDA
+     * x 1 x x x x x x DDA
+     * x x 1 x x x x x Card capture
+     * x x x 0 x x x x RFU
+     * x x x x 1 x x x CDA
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     */
     public final static String tag9F33 = "9F33"; // Terminal Capabilities b length 3 - Indicates the card data input , CVM and Security capabilities of the terminal
     public final static String tag9F1A = "9F1A"; // Terminal Country Code n 3 length 2 - Indicates the country of the terminal , represented according to ISO 3166
     public final static String tag9F1B = "9F1B"; // Terminal Floor Limit b length 4 - Indicates the floor limit in the terminal in conjunction with the AID
     public final static String tag9F1C = "9F1C"; // Terminal Identification an 8 length 8 - Designates the unique location of a terminal at a merchant
     public final static String tag9F1D = "9F1D"; // Terminal Risk Management Data b length 1-8. - Application-specific value used by the card for risk management purposes
     public final static String tag9F35 = "9F35"; // Terminal Type n 2 length 1 - Indicates the environment of the terminal , its communications capability, and its operational control
+    /**
+     * Terminal Verification Results
+     * TVR Byte 1: (Leftmost)
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Offline data authentication was not performed
+     * x 1 x x x x x x SDA failed
+     * x x 1 x x x x x ICC data missing
+     * x x x 1 x x x x Card appears on terminal exception file 22
+     * x x x x 1 x x x DDA failed
+     * x x x x x 1 x x CDA failed
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * TVR Byte 2:
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x ICC and terminal have different application versions
+     * x 1 x x x x x x Expired application
+     * x x 1 x x x x x Application not yet effective
+     * x x x 1 x x x x Requested service not allowed for card product
+     * x x x x 1 x x x New card
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * TVR Byte 3:
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Cardholder verification was not successful
+     * x 1 x x x x x x Unrecognised CVM
+     * x x 1 x x x x x PIN Try Limit exceeded
+     * x x x 1 x x x x PIN entry required and PIN pad not present or not working
+     * x x x x 1 x x x PIN entry required, PIN pad present, but PIN was not entered
+     * x x x x x 1 x x Online PIN entered
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * TVR Byte 4:
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Transaction exceeds floor limit
+     * x 1 x x x x x x Lower consecutive offline limit exceeded
+     * x x 1 x x x x x Upper consecutive offline limit exceeded
+     * x x x 1 x x x x Transaction selected randomly for online processing
+     * x x x x 1 x x x Merchant forced transaction online
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     * TVR Byte 5 (Rightmost):
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Default TDOL used
+     * x 1 x x x x x x Issuer authentication failed
+     * x x 1 x x x x x Script processing failed before final GENERATE AC
+     * x x x 1 x x x x Script processing failed after final GENERATE AC
+     * x x x x 0 x x x RFU
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     */
     public final static String tag95 = "95"; // Terminal Verification Results b length 5 - Status of the different functions as seen from the terminal
     public final static String THRESHOLD_VALUE = "THRESHOLD_VALUE"; // Threshold Value for Biased Random Selection
     public final static String TRANS_AMOUNT = "TRANS_AMOUNT"; // Transaction amount n 12 length 6 - Clearing amount of the transaction, including tips and other adjustments

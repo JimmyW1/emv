@@ -96,6 +96,10 @@ public class ReadCardState extends AbstractEmvState {
         }
     }
 
+    /**
+     * When any mandatory data object is missing, the terminal terminates the
+     * transaction unless otherwise specified in these specifications.
+     */
     private boolean checkIfMissingMandatoryData() {
         boolean isMissingMandatoryData = false;
 

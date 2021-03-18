@@ -42,6 +42,31 @@ public class EMVTag {
     public final static String tag5F24 = "5F24"; // Application Expiration Date n 6 length 3 Template 70 or 77 - Date from which the application may be used
     public final static String tag94 = "94"; // Application File Locator(AFL) var. length Var up to 252 Template 77 or 80 - Indicates the location (SFI, range of records) of the AEFs related to a given application
     public final static String tag4F = "4F"; // Application Dedicated File(ADF) Name b length 5-16. Template 61 - Identifies the application as described in ISO/IEC 7816-5
+    /**
+     * AIP Byte 1 (Leftmost)
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 0 x x x x x x x RFU
+     * x 1 x x x x x x SDA supported
+     * x x 1 x x x x x DDA supported
+     * x x x 1 x x x x Cardholder verification is supported
+     * x x x x 1 x x x Terminal risk management is to be performed
+     * x x x x x 1 x x Issuer authentication is supported 19
+     * x x x x x x 0 x RFU
+     * x x x x x x x 1 CDA supported
+     *
+     * AIP Byte 2 (Rightmost)
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 0 x x x x x x x Reserved for use by the EMV
+     * Contactless Specifications
+     * x 0 x x x x x x RFU
+     * x x 0 x x x x x RFU
+     * x x x 0 x x x x RFU
+     * x x x x 0 x x x RFU
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     *
+     */
     public final static String tag82 = "82"; // Application Interchange Profile b length 2. Template 77 or 80 - Indicates the capabilities of the card to support specific functions in the application
     public final static String tag50 = "50"; // Application Label ans with the special character limited to space length 1-16. Template 61 or A5 - Mnemonic associated with the AID according to ISO/IEC 7816-5
     public final static String tag9F12 = "9F12"; // Application Preferred Name ans length 1-16 Template 61 or A5  - Preferred mnemonic associated with the AID
@@ -76,8 +101,62 @@ public class EMVTag {
      * whole bytes
      */
     public final static String tag57 = "57"; // format b, n var up to 19, Template 70 or 77
+    /**
+     * Service Code Service code as defined in ISO/IEC 7813 for
+     * track 1 and track 2
+     * ICC n 3 '70' or '77' '5F30' 2
+     */
     public final static String tag5F30 = "5F30";
-
-
-
+    /**
+     * Certification
+     * Authority Public
+     * Key Index
+     * Identifies the certification authority’s public
+     * key in conjunction with the RID
+     * ICC b '70' or '77' '8F' 1
+     */
+    public final static String tag8F = "8F";
+    /**
+     * Issuer Public Key Certificate Issuer public key certified by a certification authority
+     * ICC b '70' or '77' '90' NCA
+     */
+    public final static String tag90 = "90";
+    /**
+     * Signed Static Application Data Digital signature on critical application parameters for SDA
+     * ICC b '70' or '77' '93' NI
+     */
+    public final static String tag93 = "93";
+    /**
+     * Issuer Public Key Remainder Remaining digits of the Issuer Public Key Modulus
+     * ICC b '70' or '77' '92' NI −  NCA + 36
+     */
+    public final static String tag92 = "92";
+    /**
+     * Issuer Public Key Exponent Issuer public key exponent used for the verification of the Signed Static Application
+     * Data and the ICC Public Key Certificate
+     * ICC b '70' or '77' '9F32' 1 to 3
+     */
+    public final static String tag9F32 = "9F32";
+    /**
+     * Integrated Circuit Card (ICC) Public Key Certificate
+     * ICC Public Key certified by the issuer ICC b '70' or '77' '9F46' NI
+     */
+    public final static String tag9F46 = "9F46";
+    /**
+     * Integrated Circuit Card (ICC) Public Key Exponent ICC Public Key Exponent used for the
+     * verification of the Signed Dynamic Application Data
+     * ICC b '70' or '77' '9F47' 1 to 3
+     */
+    public final static String tag9F47 = "9F47";
+    /**
+     * Integrated Circuit Card (ICC) Public Key Remainder Remaining digits of the ICC Public Key Modulus
+     * ICC b '70' or '77' '9F48' NIC − NI + 42
+     */
+    public final static String tag9F48 = "9F48";
+    /**
+     * Dynamic Data Authentication Data Object List (DDOL) List of data objects (tag and length) to be
+     * passed to the ICC in the INTERNAL AUTHENTICATE command
+     * ICC b '70' or '77' '9F49' up to 252
+     */
+    public final static String tag9F49 = "9F49";
 }
