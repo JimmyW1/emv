@@ -35,7 +35,7 @@ public class IdleState extends AbstractEmvState {
 
             // 2. load terminal application parameters/ CA public keys
             emvTransData.setTerminalApplicationMapList(getEmvAppParamListMap());
-            emvTransData.setCaPublicKeyList(dbOperation.getEmvKeyParamList(context.getEmvParams().getEmvParameterGroup()));
+            emvTransData.setCaPublicKeyList(getEmvKeyListMap());
 
             jumpToState(STATE_SELECT_APP);
             sendMessage(new Msg_StartSelectApp());
@@ -53,5 +53,18 @@ public class IdleState extends AbstractEmvState {
         }
 
         return emvAppParamListMap;
+    }
+
+    private List<Map<String, String>> getEmvKeyListMap() {
+        IDbOperation dbOperation = getEmvContext().getDbOperation();
+        List<String> emvCapksList = dbOperation.getEmvKeyParamList(getEmvContext().getEmvParams().getEmvParameterGroup());
+        List<Map<String, String>> emvCapksListMap = new ArrayList<>();
+        Map<String, String> map;
+        for (String emvKeyParam : emvCapksList) {
+            map = TLVUtil.toTlvMap(emvKeyParam);
+            emvCapksListMap.add(map);
+        }
+
+        return emvCapksListMap;
     }
 }

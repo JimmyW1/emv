@@ -10,6 +10,7 @@ import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
+import com.vfi.android.emvkernel.data.consts.ParamTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.libtools.utils.LogUtil;
 
@@ -151,6 +152,10 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doSDAProcess() {
+        if (!retrievalCertificationAuthorityPublicKey()) {
+            setErrorCode(EMVResultCode.ERR_MISSING_CERT_AUTH_PUBLIC_KEY);
+            stopEmv();
+        }
 
     }
 
@@ -160,5 +165,33 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
     private void doDDAProcess() {
 
+    }
+
+    private boolean retrievalCertificationAuthorityPublicKey() {
+        String dfName = getEmvTransData().getTagMap().get(EMVTag.tag84);
+        String rid = dfName.substring(0, 10);
+        String authPubKeyIndex = getEmvTransData().getTagMap().get(EMVTag.tag8F);
+        LogUtil.d(TAG, "retrievalCertificationAuthorityPublicKey rid=[" + rid + "] authPubKeyIndex=[" + authPubKeyIndex + "]");
+
+        for (Map<String, String> emvKeyMap : getEmvTransData().getCaPublicKeyList()) {
+            if (rid.equals(emvKeyMap.get(ParamTag.RID))
+                    && authPubKeyIndex.equals(emvKeyMap.get(ParamTag.AUTH_PUB_KEY_IDX))) {
+                LogUtil.d(TAG, "retrievalCertificationAuthorityPublicKey success");
+                getEmvTransData().setSelectCardEmvKeyParamsMap(emvKeyMap);
+                printDebugCardEmvKeyParams();
+                return true;
+            }
+        }
+
+        LogUtil.d(TAG, "retrievalCertificationAuthorityPublicKey failed");
+        return false;
+    }
+
+    private void printDebugCardEmvKeyParams() {
+        LogUtil.d(TAG, "=============printDebugCardEmvKeyParams Start===============");
+        for (String tag : getEmvTransData().getSelectCardEmvKeyParamsMap().keySet()) {
+            LogUtil.d(TAG, "TAG[" + tag + "]=[" + getEmvTransData().getSelectCardEmvKeyParamsMap().get(tag) + "]");
+        }
+        LogUtil.d(TAG, "=============printDebugCardEmvKeyParams   End===============");
     }
 }

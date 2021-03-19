@@ -13,17 +13,18 @@ public class EmvTransData {
     private List<EmvApplication> candidateList;
     private List<Map<String, String>> terminalApplicationMapList;
     private Map<String, String> selectAppTerminalParamsMap;
-    private List<String> caPublicKeyList;
+    private List<Map<String, String>> caPublicKeyList;
+    private Map<String, String> selectCardEmvKeyParamsMap;
     private int errorCode;
     private Map<String, String> tagMap;
-    private com.vfi.android.emvkernel.data.beans.tagbeans.TVR tvr;
-    private com.vfi.android.emvkernel.data.beans.tagbeans.TSI tsi;
+    private TVR tvr;
+    private TSI tsi;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
         tagMap = new HashMap<>();
-        tvr = new com.vfi.android.emvkernel.data.beans.tagbeans.TVR();
-        tsi = new com.vfi.android.emvkernel.data.beans.tagbeans.TSI();
+        tvr = new TVR();
+        tsi = new TSI();
     }
 
     public void resetEmvTransData() {
@@ -83,11 +84,11 @@ public class EmvTransData {
         this.terminalApplicationMapList = terminalApplicationMapList;
     }
 
-    public List<String> getCaPublicKeyList() {
+    public List<Map<String, String>> getCaPublicKeyList() {
         return caPublicKeyList;
     }
 
-    public void setCaPublicKeyList(List<String> caPublicKeyList) {
+    public void setCaPublicKeyList(List<Map<String, String>> caPublicKeyList) {
         if (caPublicKeyList == null) {
             caPublicKeyList = new ArrayList<>();
         }
@@ -121,5 +122,13 @@ public class EmvTransData {
 
     public void setSelectAppTerminalParamsMap(Map<String, String> selectAppTerminalParamsMap) {
         this.selectAppTerminalParamsMap = selectAppTerminalParamsMap;
+    }
+
+    public Map<String, String> getSelectCardEmvKeyParamsMap() {
+        return selectCardEmvKeyParamsMap;
+    }
+
+    public void setSelectCardEmvKeyParamsMap(Map<String, String> selectCardEmvKeyParamsMap) {
+        this.selectCardEmvKeyParamsMap = selectCardEmvKeyParamsMap;
     }
 }
