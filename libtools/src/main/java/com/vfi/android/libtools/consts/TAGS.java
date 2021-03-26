@@ -11,4 +11,5 @@ public class TAGS {
     public static final String COMM = "COMM";
     public static final String SAVE_TAG = "SAVE_TAG";
     public static final String DOL = "DOL";
+    public static final String SECURITY = "SECURITY";
 }

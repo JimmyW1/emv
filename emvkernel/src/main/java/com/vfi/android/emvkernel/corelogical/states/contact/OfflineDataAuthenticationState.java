@@ -12,6 +12,7 @@ import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
+import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 
 import java.util.Map;
@@ -39,23 +40,48 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
     private void processStartOfflineDataAuthMessage(Message message) {
         int supportMode = checkSupportOfflineDataAuthMethod();
+        if (supportMode == NOT_SUPPORT) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
+            // TODO jump to next state
+        }
 
         if (checkIfMissingMandatoryData(supportMode)) {
             LogUtil.d(TAG, "Offline data authentication missing Mandatory data.");
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_ICC_DATA_MISSING, true);
             setErrorCode(EMVResultCode.ERR_MISSING_MANDATORY_DATA);
             stopEmv();
             return;
         }
 
-        if (supportMode == NOT_SUPPORT) {
-            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
-            // TODO jump to next state
-        } else if (supportMode == CDA) {
+        if (!retrievalCertificationAuthorityPublicKey()) {
+            // TODO should not terminate transaction.
+            markTvrOfflineDynamicDataAuthenticationFailed(supportMode);
+            // TODO whether need stop emv
+            setErrorCode(EMVResultCode.ERR_MISSING_CERT_AUTH_PUBLIC_KEY);
+            stopEmv();
+        }
+
+        if (!retrievalIssuerPublicKey()) {
+            markTvrOfflineDynamicDataAuthenticationFailed(supportMode);
+            stopEmv();
+        }
+
+        if (supportMode == CDA) {
             doCDAProcess();
         } else if (supportMode == DDA) {
             doDDAProcess();
         } else if (supportMode == SDA) {
             doSDAProcess();
+        }
+    }
+
+    private void markTvrOfflineDynamicDataAuthenticationFailed(int supportMode) {
+        if (supportMode == CDA) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_CDA_FAILED, true);
+        } else if (supportMode == DDA) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_DDA_FAILED, true);
+        } else if (supportMode == SDA) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_SDA_FAILED, true);
         }
     }
 
@@ -152,10 +178,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doSDAProcess() {
-        if (!retrievalCertificationAuthorityPublicKey()) {
-            setErrorCode(EMVResultCode.ERR_MISSING_CERT_AUTH_PUBLIC_KEY);
-            stopEmv();
-        }
+
 
     }
 
@@ -185,6 +208,33 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
         LogUtil.d(TAG, "retrievalCertificationAuthorityPublicKey failed");
         return false;
+    }
+
+    private boolean retrievalIssuerPublicKey() {
+        LogUtil.d(TAG, "retrievalIssuerPublicKey");
+        String issuerPublicKeyCert = getEmvTransData().getTagMap().get(EMVTag.tag90);
+        String authorityPublicKeyCert = getEmvTransData().getSelectCardEmvKeyParamsMap().get(ParamTag.KEY);
+        String issuerPublicKeyRemainder = getEmvTransData().getTagMap().get(EMVTag.tag92);
+        String issuerPublicKeyExponent = getEmvTransData().getTagMap().get(EMVTag.tag9F32);
+        LogUtil.d(TAG, "issuerPublicKeyCert=[" + issuerPublicKeyCert + "]");
+        LogUtil.d(TAG, "authorityPublicKeyCert=[" + authorityPublicKeyCert + "]");
+        LogUtil.d(TAG, "issuerPublicKeyRemainder=[" + issuerPublicKeyRemainder + "]");
+        LogUtil.d(TAG, "issuerPublicKeyExponent=[" + issuerPublicKeyExponent + "]");
+
+        // 1. Issuer Public Key Certificate has a length different from the length of the Certification Authority Public Key Modulus
+        if (issuerPublicKeyCert.length() != authorityPublicKeyCert.length()) {
+            LogUtil.d(TAG, "Issuer public key has different length from authority public key");
+            setErrorCode(EMVResultCode.ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_AUTHORITY_PUB_KEY);
+            return false;
+        }
+
+//        try {
+//            SecurityUtil.signVerify(issuerPublicKeyCert, authorityPublicKeyCert);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        return true;
     }
 
     private void printDebugCardEmvKeyParams() {

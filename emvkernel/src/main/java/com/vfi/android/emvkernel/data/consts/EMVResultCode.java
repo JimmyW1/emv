@@ -13,4 +13,5 @@ public class EMVResultCode {
     public static final int ERR_MISSING_MANDATORY_DATA = 1010;
     public static final int ERR_CARD_HOLDER_CANCELLED = 1011;
     public static final int ERR_MISSING_CERT_AUTH_PUBLIC_KEY = 1012;
+    public static final int ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_AUTHORITY_PUB_KEY = 1013;
 }
