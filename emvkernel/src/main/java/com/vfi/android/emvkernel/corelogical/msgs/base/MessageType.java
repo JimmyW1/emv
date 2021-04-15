@@ -8,6 +8,7 @@ public class MessageType {
     public static final String MSG_RESELECT_APP_FROM_CANDIDATE_LIST = "MSG_RESELECT_APP_FROM_CANDIDATE_LIST";
     public static final String MSG_START_CARD_CONFIRM = "MSG_START_CARD_CONFIRM";
     public static final String MSG_START_OFFLINE_DATA_AUTH = "MSG_START_OFFLINE_DATA_AUTH";
+    public static final String MSG_START_PROCESSING_RESTRICTIONS = "MSG_START_PROCESSING_RESTRICTIONS";
 
     // app messages
     public static final String MSG_START_CARDHOLDER_SELECT = "MSG_START_CARDHOLDER_SELECT";

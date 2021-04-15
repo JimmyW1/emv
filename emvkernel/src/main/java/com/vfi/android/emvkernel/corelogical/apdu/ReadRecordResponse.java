@@ -96,4 +96,8 @@ public class ReadRecordResponse extends ApduResponse {
             }
         }
     }
+
+    public String getTag70() {
+        return tag70;
+    }
 }

@@ -7,4 +7,5 @@ public class EmvStateType {
     public static final String STATE_READ_CARD = "STATE_READ_CARD";
     public static final String STATE_CARD_CONFIRM = "STATE_CARD_CONFIRM";
     public static final String STATE_OFFLINE_DATA_AUTHENTICATION = "STATE_OFFLINE_DATA_AUTHENTICATION";
+    public static final String STATE_PROCESSING_RESTRICTIONS = "STATE_PROCESSING_RESTRICTIONS";
 }

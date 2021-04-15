@@ -7,6 +7,7 @@ import com.vfi.android.libtools.utils.StringUtil;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.Security;
 import java.security.Signature;
@@ -20,53 +21,6 @@ import javax.crypto.Cipher;
 
 public class SecurityUtil {
     private static final String TAG = TAGS.SECURITY;
-
-    public static String RSAVerify(String signedDataHexStr, String modulusHexStr) throws Exception {
-        Signature signature = Signature.getInstance("NONEwithRSA");
-        BigInteger bigIntModulus = new BigInteger(modulusHexStr,16);
-        BigInteger bigIntPrivateExponent = new BigInteger("010001",16);
-        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(bigIntModulus, bigIntPrivateExponent);
-        RSAPublicKey pubKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-        signature.initVerify(pubKey);
-
-        return null;
-    }
-
-    public static byte[] rsaEncrypt(byte[] data, String modulusHexStr) throws Exception{
-        BigInteger bigIntModulus = new BigInteger(modulusHexStr,16);
-        BigInteger bigIntPrivateExponent = new BigInteger("010001",16);
-        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(bigIntModulus, bigIntPrivateExponent);
-        RSAPublicKey pubKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, pubKey);
-        byte[] encryptedData = cipher.doFinal(data);
-
-        LogUtil.d(TAG, "encryptedData=[" + StringUtil.byte2HexStr(encryptedData) + "]");
-        return encryptedData;
-    }
-
-    public static byte[] rsaDecrypt(byte[] data, byte[] privateKey) throws Exception{
-        RSAPrivateKey priKey = (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(privateKey));
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, priKey);
-        byte[] decryptedData = cipher.doFinal(data);
-
-        LogUtil.d(TAG, "decryptedData=[" + StringUtil.byte2HexStr(decryptedData) + "]");
-        return decryptedData;
-    }
-
-    public static byte[] rsaDecrypt(String signedDataHexStr, String modulusHexStr) throws Exception{
-        BigInteger bigIntModulus = new BigInteger(modulusHexStr,16);
-        BigInteger bigIntPrivateExponent = new BigInteger("010001",16);
-        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(bigIntModulus, bigIntPrivateExponent);
-        RSAPublicKey pubKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, pubKey);
-        byte[] decryptedData = cipher.doFinal(StringUtil.hexStr2Bytes(signedDataHexStr));
-
-        LogUtil.d(TAG, "decryptedData=[" + StringUtil.byte2HexStr(decryptedData) + "]");
-        return decryptedData;
-    }
 
     public static byte[] signVerify(byte[] dataBytes, byte[] expBytes, byte[] modBytes) {
 
@@ -113,39 +67,19 @@ public class SecurityUtil {
         return result;
     }
 
-    public static String signVerify(String signedDataHexStr, String modulusHexStr) throws Exception{
-        TreeSet<String> algorithms = new TreeSet<>();
-        for (Provider provider : Security.getProviders()) {
-            System.out.println("=============");
-            System.out.println(provider.getName());
-            System.out.println("=============");
-            for (Provider.Service service : provider.getServices())
-                if (service.getType().equals("Signature"))
-                    algorithms.add(service.getAlgorithm());
-        }
-        for (String algorithm : algorithms) {
-            System.out.println(algorithm);
+    public static String calculateSha1(String dataHex) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            md.update(StringUtil.hexStr2Bytes(dataHex));
 
-            try {
-                Signature signatureEngine = Signature.getInstance(algorithm);
-//        Signature signatureEngine = Signature.getInstance("SHA1/RSA-ISO9796-2", "IAIK");
-//        Signature signatureEngine = Signature.getInstance("SHA1/RSA-ISO9796-2", "IAIK");
-                BigInteger bigIntModulus = new BigInteger(modulusHexStr, 16);
-                BigInteger bigIntPrivateExponent = new BigInteger("010001", 16);
-                RSAPublicKeySpec keySpec = new RSAPublicKeySpec(bigIntModulus, bigIntPrivateExponent);
-                RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-                signatureEngine.initVerify(publicKey);
-                boolean ok = signatureEngine.verify(StringUtil.hexStr2Bytes(signedDataHexStr));
-                LogUtil.d(TAG, "ok=" + ok);
-            } catch (Exception e) {
+            StringBuilder buf = new StringBuilder();
+            byte[] digest = md.digest();
+            buf.append(StringUtil.byte2HexStr(digest));
 
-            }
+            return buf.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
         }
-        return null;
-//        AlgorithmParameters recoveredMessage =
-//                (AlgorithmParameters)signatureEngine.getParameters();
-//        byte[] message = recoveredMessage.getEncoded();
-//
-//        return StringUtil.byte2HexStr(message);
     }
 }

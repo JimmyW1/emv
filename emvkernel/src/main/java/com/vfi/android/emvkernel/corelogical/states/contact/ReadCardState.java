@@ -45,7 +45,8 @@ public class ReadCardState extends AbstractEmvState {
         String pdolTags = getPDOLData();
         byte[] retData = executeApduCmd(new GetProcessingOptionsCmd(pdolTags));
         GetProcessingOptionsResponse response = new GetProcessingOptionsResponse(retData);
-        List<ReadRecordResponse> offlineDataAuthRecordList = new ArrayList<>();
+        String offlineDataToBeAuth = "";
+        getEmvTransData().setExistStaticDataRecordNotCodeWithTag70(false);
         if (response.isSuccess()) {
             response.saveTags(getEmvTransData().getTagMap());
             String AFL = response.getAFL();
@@ -63,7 +64,14 @@ public class ReadCardState extends AbstractEmvState {
                     if (readRecordResponse.isSuccess()) {
                         if (numOfOfflineDataRecords > 0 && recordNum < startRecordNum + numOfOfflineDataRecords) {
                             LogUtil.d(TAG, "save offline data authentication sfi=[" + sfi + "] recordNum=[" + recordNum + "]");
-                            offlineDataAuthRecordList.add(readRecordResponse);
+                            if (readRecordResponse.getTag70() == null || readRecordResponse.getTag70().length() == 0) {
+                                getEmvTransData().setExistStaticDataRecordNotCodeWithTag70(true);
+                            }
+                            if (recordNum >= 1 && recordNum <= 10) {
+                                offlineDataToBeAuth += readRecordResponse.getTag70();
+                            } else {
+                                offlineDataToBeAuth += StringUtil.byte2HexStr(readRecordResponse.getData());
+                            }
                         }
                         readRecordResponse.saveTags(getEmvTransData().getTagMap());
                     } else {
@@ -79,6 +87,8 @@ public class ReadCardState extends AbstractEmvState {
                 setErrorCode(EMVResultCode.ERR_MISSING_MANDATORY_DATA);
                 stopEmv();
             } else {
+                LogUtil.d(TAG, "offlineDataToBeAuth=[" + offlineDataToBeAuth + "]");
+                getEmvTransData().setStaticDataToBeAuthenticated(offlineDataToBeAuth);
                 // TODO
                 jumpToState(EmvStateType.STATE_CARD_CONFIRM);
                 sendMessage(new Msg_StartCardConfirm());
@@ -143,7 +153,7 @@ public class ReadCardState extends AbstractEmvState {
                 if (tagMap.containsKey(dolBean.getTag())) {
                     pdolData += dolBean.formatValue(tagMap.get(dolBean.getTag()));
                 } else {
-                    pdolData += StringUtil.getNonNullStringLeftPadding("0", dolBean.getLen());
+                    pdolData += StringUtil.getNonNullStringLeftPadding("0", dolBean.getLen() * 2);
                 }
             }
         }

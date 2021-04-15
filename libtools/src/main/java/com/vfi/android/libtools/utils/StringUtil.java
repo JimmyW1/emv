@@ -1315,4 +1315,12 @@ public class StringUtil {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HHmmss");// HH:mm:ss
         return simpleDateFormat.format(date);
     }
+
+    public static String getLastDayOfThisMonth() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar ca = Calendar.getInstance();
+        ca.set(Calendar.DAY_OF_MONTH, ca.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String lastDay = format.format(ca.getTime());
+        return lastDay.substring(lastDay.length() - 2);
+    }
 }

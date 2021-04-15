@@ -1,5 +1,6 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
@@ -15,6 +16,8 @@ public class EmvTransData {
     private Map<String, String> selectAppTerminalParamsMap;
     private List<Map<String, String>> caPublicKeyList;
     private Map<String, String> selectCardEmvKeyParamsMap;
+    private String staticDataToBeAuthenticated;
+    private boolean isExistStaticDataRecordNotCodeWithTag70;
     private int errorCode;
     private Map<String, String> tagMap;
     private TVR tvr;
@@ -130,5 +133,21 @@ public class EmvTransData {
 
     public void setSelectCardEmvKeyParamsMap(Map<String, String> selectCardEmvKeyParamsMap) {
         this.selectCardEmvKeyParamsMap = selectCardEmvKeyParamsMap;
+    }
+
+    public String getStaticDataToBeAuthenticated() {
+        return staticDataToBeAuthenticated;
+    }
+
+    public void setStaticDataToBeAuthenticated(String staticDataToBeAuthenticated) {
+        this.staticDataToBeAuthenticated = staticDataToBeAuthenticated;
+    }
+
+    public boolean isExistStaticDataRecordNotCodeWithTag70() {
+        return isExistStaticDataRecordNotCodeWithTag70;
+    }
+
+    public void setExistStaticDataRecordNotCodeWithTag70(boolean existStaticDataRecordNotCodeWithTag70) {
+        isExistStaticDataRecordNotCodeWithTag70 = existStaticDataRecordNotCodeWithTag70;
     }
 }
