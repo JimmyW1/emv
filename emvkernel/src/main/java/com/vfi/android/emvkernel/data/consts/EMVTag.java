@@ -159,4 +159,6 @@ public class EMVTag {
      * ICC b '70' or '77' '9F49' up to 252
      */
     public final static String tag9F49 = "9F49";
+
+    public final static String tag9F4A = "9F4A";
 }

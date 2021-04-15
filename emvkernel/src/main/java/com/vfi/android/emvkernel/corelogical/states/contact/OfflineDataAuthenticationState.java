@@ -1,6 +1,5 @@
 package com.vfi.android.emvkernel.corelogical.states.contact;
 
-import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartOfflineDataAuth;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartProcessingRestrictions;
@@ -18,7 +17,6 @@ import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
-import java.util.List;
 import java.util.Map;
 
 public class OfflineDataAuthenticationState extends AbstractEmvState {
@@ -195,9 +193,9 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         //1. If the Signed Static Application Data has a length different from the
         //length of the Issuer Public Key Modulus, SDA has failed.
         String signedStaticApplicationData = getEmvTransData().getTagMap().get(EMVTag.tag93);
+        LogUtil.d(TAG, "Signed Static Application Data=[" + signedStaticApplicationData + "]");
         if (issuerPublicKey == null || issuerPublicKey.length() != signedStaticApplicationData.length()) {
             LogUtil.d(TAG, "Signed Static Application Data has a length different from the length of the Issuer Public Key Modulus");
-            LogUtil.d(TAG, "Signed Static Application Data=[" + signedStaticApplicationData + "]");
             setErrorCode(EMVResultCode.ERR_SIGNED_STATIC_APP_DATA_HAVE_DIFFERENT_LENGTH_WITH_PUBLIC_KEY);
             finishOfflineDataAuthentication(SDA, false);
             return;
@@ -237,23 +235,25 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
         //4. Check the Certificate Format. If it is not '04', offline dynamic data
         //authentication has failed.
-        if (!recoveredSignedStaticAppDataHex.substring(2, 4).equals("04")) {
-            LogUtil.d(TAG, "Recovered Data Certificate Format not equal to '04'");
-            setErrorCode(EMVResultCode.ERR_SIGNED_STATIC_APP_DATA_CERTIFICATE_FORMAT_NOT_04);
+        if (!recoveredSignedStaticAppDataHex.substring(2, 4).equals("03")) {
+            LogUtil.d(TAG, "Recovered Data Certificate Format not equal to '03'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_STATIC_APP_DATA_CERTIFICATE_FORMAT_NOT_03);
             finishOfflineDataAuthentication(SDA, false);
             return;
         }
 
+        //5. Concatenate from left to right the second to the fifth data elements in
+        //Table 7 (that is, Signed Data Format through Pad Pattern), followed by
+        //the static data to be authenticated as specified in section 10.3 of Book 3. If
+        //the Static Data Authentication Tag List is present and contains tags other
+        //than '82', then SDA has failed.
+        //6. Apply the indicated hash algorithm (derived from the Hash Algorithm
+        //Indicator) to the result of the concatenation of the previous step to
+        //produce the hash result.
+        //7. Compare the calculated hash result from the previous step with the
+        //recovered Hash Result. If they are not the same, SDA has failed.
         String hashData = "";
-        hashData += recoveredSignedStaticAppDataHex.substring((1+1+10+2+3+1+1+1+1) * 2, recoveredSignedStaticAppDataHex.length() - 2 - 40);
-        LogUtil.d(TAG, "hashData=[" + hashData + "]");
-
-        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag92)) {
-            hashData += getEmvTransData().getTagMap().get(EMVTag.tag92);
-            LogUtil.d(TAG, "hashData=[" + hashData + "]");
-        }
-
-        hashData += getEmvTransData().getTagMap().get(EMVTag.tag9F32);
+        hashData += recoveredSignedStaticAppDataHex.substring(2, recoveredSignedStaticAppDataHex.length() - 2 - 40);
         LogUtil.d(TAG, "hashData=[" + hashData + "]");
 
         if (getEmvTransData().isExistStaticDataRecordNotCodeWithTag70()) {
@@ -262,15 +262,36 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
             finishOfflineDataAuthentication(SDA, false);
             return;
         }
+
         hashData += getEmvTransData().getStaticDataToBeAuthenticated();
         LogUtil.d(TAG, "hashData=[" + hashData + "]");
 
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F4A)) {
+            String tag9F4AValue = getEmvTransData().getTagMap().get(EMVTag.tag9F4A);
+            LogUtil.d(TAG, "Optional Static Data Authentication Tag List=[" + tag9F4AValue + "]");
+            if (tag9F4AValue.length() > 0 && !tag9F4AValue.equals(EMVTag.tag82)) {
+                LogUtil.d(TAG, "Optional Static Data Authentication Tag List not only tag82");
+                setErrorCode(EMVResultCode.ERR_OPTIONAL_STATIC_DATA_AUTHENTICATION_TAG_LIST_NOT_ONLY_TAG82);
+                finishOfflineDataAuthentication(SDA, false);
+                return;
+            }
+            hashData += getEmvTransData().getTagMap().get(EMVTag.tag82);
+            LogUtil.d(TAG, "hashData=[" + hashData + "]");
+        }
+
         String hash = SecurityUtil.calculateSha1(hashData);
         LogUtil.d(TAG, "hash=[" + hash + "]");
-        //
+        int recoveredHashStartIndex = recoveredSignedStaticAppDataHex.length() - 2 - 40;
+        String recoveredHashHex = recoveredSignedStaticAppDataHex.substring(recoveredHashStartIndex, recoveredHashStartIndex + 40);
+        if (!hash.equals(recoveredHashHex)) {
+            LogUtil.d(TAG, "Calculate hash is not the same with recovered hash result");
+            setErrorCode(EMVResultCode.ERR_CALCULATE_HASH_IS_NOT_THE_SAME_WITH_RECOVERED_HASH_RESULT);
+            finishOfflineDataAuthentication(SDA, false);
+            return;
+        }
 
-
-
+        finishOfflineDataAuthentication(SDA, true);
+        LogUtil.d(TAG, "Perform SDA Success");
     }
 
     private void doCDAProcess() {
@@ -430,6 +451,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         }
         certificateExpirationDate = year + MM + StringUtil.getLastDayOfThisMonth();
         String currentYYYYMMDD = StringUtil.getSystemDate();
+        LogUtil.d(TAG, "currentYYYYMMDD=[" + currentYYYYMMDD + "] issuerPublicKeyExpirationDate=[" + certificateExpirationDate + "]");
         if (StringUtil.parseInt(currentYYYYMMDD, 0) >= StringUtil.parseInt(certificateExpirationDate, 0)) {
             LogUtil.d(TAG, "Public key certificate expiration");
             setErrorCode(EMVResultCode.ERR_ISSUER_PUB_KEY_EXPIRATION);
