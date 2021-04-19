@@ -1,11 +1,14 @@
 package com.vfi.android.emvkernel.corelogical.states.contact;
 
+import com.vfi.android.emvkernel.corelogical.apdu.InternalAuthenticateCmd;
+import com.vfi.android.emvkernel.corelogical.apdu.InternalAuthenticateResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartOfflineDataAuth;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartProcessingRestrictions;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
+import com.vfi.android.emvkernel.data.beans.DOLBean;
 import com.vfi.android.emvkernel.data.beans.tagbeans.AIP;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
@@ -13,10 +16,13 @@ import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
+import com.vfi.android.emvkernel.utils.DOLUtil;
 import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
+import com.vfi.android.libtools.utils.TLVUtil;
 
+import java.util.List;
 import java.util.Map;
 
 public class OfflineDataAuthenticationState extends AbstractEmvState {
@@ -26,6 +32,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     public static final int CDA = 3;
 
     private String issuerPublicKey;
+    private String iccPublicKey;
 
     public OfflineDataAuthenticationState() {
         super(EmvStateType.STATE_OFFLINE_DATA_AUTHENTICATION);
@@ -292,6 +299,11 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
         finishOfflineDataAuthentication(SDA, true);
         LogUtil.d(TAG, "Perform SDA Success");
+
+        int dataAuthCodeStartIndex = (1 + 1 + 1) * 2;
+        String dataAuthenticationCode = recoveredSignedStaticAppDataHex.substring(dataAuthCodeStartIndex, dataAuthCodeStartIndex + 2 * 2);
+        LogUtil.d(TAG, "dataAuthenticationCode=[" + dataAuthenticationCode + "]");
+        getEmvTransData().getTagMap().put(EMVTag.tag9F45, dataAuthenticationCode);
     }
 
     private void doCDAProcess() {
@@ -299,7 +311,66 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doDDAProcess() {
+        String ddolTags = getDDOL();
+        if (ddolTags == null || ddolTags.length() <= 0) {
+            LogUtil.d(TAG, "DDA Missing DDOL");
+            setErrorCode(EMVResultCode.ERR_MISSING_DDOL);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
 
+        boolean isExistUnpredictableNumber = false;
+        String ddolTagsData = "";
+        if (ddolTags != null && ddolTags.length() > 0) {
+            List<DOLBean> dolBeanList = DOLUtil.toDOLDataList(ddolTags);
+            for (DOLBean dolBean : dolBeanList) {
+                if (dolBean.getTag().equals(EMVTag.tag9F37) && dolBean.getLen() == 4) {
+                    isExistUnpredictableNumber = true;
+                }
+                if (getEmvTransData().getTagMap().containsKey(dolBean.getTag())) {
+                    ddolTagsData += dolBean.formatValue(getEmvTransData().getTagMap().get(dolBean.getTag()));
+                } else {
+                    ddolTagsData += StringUtil.getNonNullStringLeftPadding("0", dolBean.getLen() * 2);
+                }
+            }
+        }
+
+        if (!isExistUnpredictableNumber) {
+            LogUtil.d(TAG, "Missging tag9F37 - Unpredictable Number");
+            setErrorCode(EMVResultCode.ERR_MISSING_UNPREDICTABLE_NUMBER);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        //InternalAuthenticate
+        byte[] ret = executeApduCmd(new InternalAuthenticateCmd(ddolTagsData));
+        InternalAuthenticateResponse response = new InternalAuthenticateResponse(ret);
+        if (!response.isSuccess()) {
+            LogUtil.d(TAG, "Execute InternalAuthenticate failed. response status=[" + response.getStatus() + "]");
+            setErrorCode(EMVResultCode.ERR_EXECUTE_INTERNAL_AUTHENTICATE_FAILED);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        if (!retrievalICCPublicKey()) {
+
+        }
+
+        byte[] iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F47));
+
+    }
+
+    private String getDDOL() {
+        String DDOL;
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F49)) {
+            DDOL = getEmvTransData().getTagMap().get(EMVTag.tag9F49);
+            LogUtil.d(TAG, "ICC DDOL=[" + DDOL + "]");
+        } else {
+            DDOL = getEmvTransData().getSelectAppTerminalParamsMap().get(ParamTag.DEFAULT_DDOL);
+            LogUtil.d(TAG, "Terminal deafult DDOL=[" + DDOL + "]");
+        }
+
+        return DDOL;
     }
 
     private void finishOfflineDataAuthentication(int supportMode, boolean isSuccess) {
@@ -330,6 +401,188 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
         LogUtil.d(TAG, "retrievalCertificationAuthorityPublicKey failed");
         return false;
+    }
+
+    private  boolean retrievalICCPublicKey() {
+        LogUtil.d(TAG, "retrievalICCPublicKey");
+        String iccPublicKeyCert = getEmvTransData().getTagMap().get(EMVTag.tag9F46);
+        String iccPublicKeyExponent = getEmvTransData().getTagMap().get(EMVTag.tag9F47);
+        String iccPublicKeyRemainder = getEmvTransData().getTagMap().get(EMVTag.tag9F48);
+        LogUtil.d(TAG, "iccPublicKeyCert=[" + iccPublicKeyCert + "]");
+        LogUtil.d(TAG, "iccPublicKeyExponent=[" + iccPublicKeyExponent + "]");
+        LogUtil.d(TAG, "iccPublicKeyRemainder=[" + iccPublicKeyRemainder + "]");
+
+        // 1. If the ICC Public Key Certificate has a length different from the length of
+        //the Issuer Public Key Modulus obtained in the previous section, offline
+        //dynamic data authentication has failed.
+        if (issuerPublicKey.length() != iccPublicKeyCert.length()) {
+            LogUtil.d(TAG, "ICC Public Key Certificate has a length different from issuer public key");
+            setErrorCode(EMVResultCode.ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_ICC_PUBLIC_KEY_CERT);
+            return false;
+        }
+
+        byte[] iccPublicKeyCertBytes = StringUtil.hexStr2Bytes(iccPublicKeyCert);
+        byte[] issuerPublicKeyExponentBytes = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F32));
+        byte[] iccPublicKeyCertRecoveredBytes = SecurityUtil.signVerify(iccPublicKeyCertBytes, issuerPublicKeyExponentBytes, StringUtil.hexStr2Bytes(issuerPublicKey));
+        String iccPublicKeyCertRecoveredHex = StringUtil.byte2HexStr(iccPublicKeyCertRecoveredBytes);
+        LogUtil.d(TAG, "iccPublicKeyCertRecoveredHex=[" + iccPublicKeyCertRecoveredHex + "]");
+
+        // 2. In order to obtain the recovered data specified in Table 14, apply the
+        //recovery function as specified in Annex A2.1 on the ICC Public Key
+        //Certificate using the Issuer Public Key in conjunction with the
+        //corresponding algorithm. If the Recovered Data Trailer is not equal to
+        //'BC', offline dynamic data authentication has failed
+
+        if (iccPublicKeyCertRecoveredHex == null || iccPublicKeyCertRecoveredHex.length() < 42 * 2) {
+            LogUtil.d(TAG, "Recovered data failed.");
+            setErrorCode(EMVResultCode.ERR_ICC_PUB_KEY_RECOVERED_FAILED);
+            return false;
+        }
+
+        if (!iccPublicKeyCertRecoveredHex.endsWith("BC")) {
+            LogUtil.d(TAG, "Recovered Data Trailer is not equal to 'BC'");
+            setErrorCode(EMVResultCode.ERR_ICC_PUB_KEY_RECOVERED_DATA_TRAILER_NOT_BC);
+            return false;
+        }
+
+        //3. Check the Recovered Data Header. If it is not '6A', offline dynamic data
+        //authentication has failed.
+        if (!iccPublicKeyCertRecoveredHex.startsWith("6A")) {
+            LogUtil.d(TAG, "Recovered Data Header is not equal to '6A'");
+            setErrorCode(EMVResultCode.ERR_ICC_PUB_KEY_RECOVERED_DATA_HEADER_NOT_6A);
+            return false;
+        }
+
+        //4. Check the Certificate Format. If it is not '02', offline dynamic data
+        //authentication has failed.
+        if (!iccPublicKeyCertRecoveredHex.substring(2, 4).equals("04")) {
+            LogUtil.d(TAG, "Recovered Data Certificate Format not equal to '04'");
+            setErrorCode(EMVResultCode.ERR_ICC_PUB_KEY_RECOVERED_DATA_CERTIFICATE_FORMAT_NOT_04);
+            return false;
+        }
+
+        //5. Concatenate from left to right the second to the tenth data elements in
+        //Table 14 (that is, Certificate Format through ICC Public Key or Leftmost
+        //Digits of the ICC Public Key), followed by the ICC Public Key Remainder
+        //(if present), the ICC Public Key Exponent, and finally the static data to be
+        //authenticated specified in section 10.3 of Book 3. If the Static Data
+        //Authentication Tag List is present and contains tags other than '82', then
+        //offline dynamic data authentication has failed.
+        //6. Apply the indicated hash algorithm (derived from the Hash Algorithm
+        //Indicator) to the result of the concatenation of the previous step to
+        //produce the hash result.
+        //7. Compare the calculated hash result from the previous step with the
+        //recovered Hash Result. If they are not the same, offline dynamic data
+        //authentication has failed.
+        String hexData = iccPublicKeyCertRecoveredHex.substring(2, iccPublicKeyCertRecoveredHex.length() - 2 - 40);
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F48)) {
+            hexData += getEmvTransData().getTagMap().get(EMVTag.tag9F48);
+        }
+        hexData += getEmvTransData().getTagMap().get(EMVTag.tag9F47);
+
+        if (getEmvTransData().isExistStaticDataRecordNotCodeWithTag70()) {
+            LogUtil.d(TAG, "Read offline static data record not code with tag70");
+            setErrorCode(EMVResultCode.ERR_READ_OFFLINE_STATIC_DATA_RECORD_NOT_CODED_WITH_TAG70);
+            return false;
+        }
+
+        hexData += getEmvTransData().getStaticDataToBeAuthenticated();
+
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F4A)) {
+            String tag9F4AValue = getEmvTransData().getTagMap().get(EMVTag.tag9F4A);
+            LogUtil.d(TAG, "Optional Static Data Authentication Tag List=[" + tag9F4AValue + "]");
+            if (tag9F4AValue.length() > 0 && !tag9F4AValue.equals(EMVTag.tag82)) {
+                LogUtil.d(TAG, "Optional Static Data Authentication Tag List not only tag82");
+                setErrorCode(EMVResultCode.ERR_OPTIONAL_STATIC_DATA_AUTHENTICATION_TAG_LIST_NOT_ONLY_TAG82);
+                return false;
+            }
+            hexData += getEmvTransData().getTagMap().get(EMVTag.tag82);
+        }
+        LogUtil.d(TAG, "hexData=[" + hexData + "]");
+
+        int hashIndicatorStartIndex = (1+1+10+2+3) * 2;
+        String hashIndicator = iccPublicKeyCertRecoveredHex.substring(hashIndicatorStartIndex, hashIndicatorStartIndex + 2);
+        LogUtil.d(TAG, "hashIndicator=[" + hashIndicator + "]");
+        if (hashIndicator.equals("01")) {
+            String hashHex = SecurityUtil.calculateSha1(hexData);
+            String iccKeyCertificateHash = iccPublicKeyCertRecoveredHex.substring(iccPublicKeyCertRecoveredHex.length() - 2 - 40, iccPublicKeyCertRecoveredHex.length() - 2);
+            LogUtil.d(TAG, "calculate hash hex=[" + hashHex + "], certificate hash hex=[" + iccKeyCertificateHash + "]");
+
+            if (!iccKeyCertificateHash.equals(hashHex)) {
+                LogUtil.d(TAG, "Hash not the same, DDA failed.");
+                setErrorCode(EMVResultCode.ERR_ICC_PUB_KEY_RECOVERED_DATA_CERTIFICATE_HASH_WRONG);
+                return false;
+            }
+        } else {
+            LogUtil.d(TAG, "Hash indicator =[" + hashIndicator + "] not support");
+            setErrorCode(EMVResultCode.ERR_HASH_INDICATOR_ALGO_NOT_SUPPORT);
+            return false;
+        }
+
+        //8. Compare the recovered PAN to the Application PAN read from the ICC. If
+        //they are not the same, offline dynamic data authentication has failed.
+        int applicationPanStartIndex = (1+1) * 2;
+        String applicationPanHex = iccPublicKeyCertRecoveredHex.substring(applicationPanStartIndex, applicationPanStartIndex + 10 * 2);
+        applicationPanHex = applicationPanHex.replace("F", "");
+        String panHex = getEmvTransData().getTagMap().get(EMVTag.tag5A);
+        if (!panHex.startsWith(applicationPanHex)) {
+            LogUtil.d(TAG, "Verify Application Pan failed.");
+            setErrorCode(EMVResultCode.ERR_VERIFY_APPLICATION_PAN_FAILED);
+            return false;
+        }
+
+        //9. Verify that the last day of the month specified in the Certificate
+        //Expiration Date is equal to or later than today’s date. If not, offline
+        //dynamic data authentication has failed.
+        int certificateExpirationDateStartIndex = (1+1+10) * 2;
+        // format MMYY
+        String certificateExpirationDate = iccPublicKeyCertRecoveredHex.substring(certificateExpirationDateStartIndex, certificateExpirationDateStartIndex + 2 * 2);
+        String year = certificateExpirationDate.substring(2);
+        String MM = certificateExpirationDate.substring(0, 2);
+        if (StringUtil.parseInt(year, 0) <= 50) {
+            year = "20" + year;
+        } else {
+            year = "19" + year;
+        }
+        certificateExpirationDate = year + MM + StringUtil.getLastDayOfThisMonth();
+        String currentYYYYMMDD = StringUtil.getSystemDate();
+        LogUtil.d(TAG, "currentYYYYMMDD=[" + currentYYYYMMDD + "] issuerPublicKeyExpirationDate=[" + certificateExpirationDate + "]");
+        if (StringUtil.parseInt(currentYYYYMMDD, 0) >= StringUtil.parseInt(certificateExpirationDate, 0)) {
+            LogUtil.d(TAG, "Public key certificate expiration");
+            setErrorCode(EMVResultCode.ERR_ISSUER_PUB_KEY_EXPIRATION);
+            return false;
+        }
+
+        //10. If the ICC Public Key Algorithm Indicator is not recognised, offline
+        //dynamic data authentication has failed.
+        int publicKeyAlgIndicatorStartIndex = (1+1+10+2+3+1) * 2;
+        String publicKeyAlgIndicator = iccPublicKeyCertRecoveredHex.substring(publicKeyAlgIndicatorStartIndex, publicKeyAlgIndicatorStartIndex+2);
+        if (!publicKeyAlgIndicator.equals("01")) {
+            LogUtil.d(TAG, "Public key Algorithm Indicator is not recognised");
+            setErrorCode(EMVResultCode.ERR_PUBLIC_KEY_ALG_INDICATOR_IS_NOT_RECOGNISED);
+            return false;
+        }
+
+        int iccPublicKeyLenStartIndex = (1+1+10+2+3+1+1) * 2;
+        String iccPublicKeyLenHex = iccPublicKeyCertRecoveredHex.substring(iccPublicKeyLenStartIndex, iccPublicKeyLenStartIndex+2);
+        int iccPublicKeyLen = StringUtil.parseInt(iccPublicKeyLenHex, 16,0);
+        // hex len need double
+        iccPublicKeyLen = iccPublicKeyLen * 2;
+        LogUtil.d(TAG, "iccPublicKeyLen=[" + iccPublicKeyLen + "]");
+
+        int iccPublicKeyRemainderLen = iccPublicKeyRemainder == null ? 0 : iccPublicKeyRemainder.length();
+        LogUtil.d(TAG, "iccPublicKeyRemainderLen=[" + iccPublicKeyRemainderLen + "]");
+
+        int iccPublicKeyStartIndex = (1+1+10+2+3+1+1+1+1) * 2;
+        int iccPublicKeyLeftMostDigitLen = iccPublicKeyLen - iccPublicKeyRemainderLen;
+        iccPublicKey = iccPublicKeyCertRecoveredHex.substring(iccPublicKeyStartIndex, iccPublicKeyStartIndex + iccPublicKeyLeftMostDigitLen);
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F48)) {
+            iccPublicKey += getEmvTransData().getTagMap().get(EMVTag.tag9F48);
+        }
+        LogUtil.d(TAG, "iccPublicKey=[" + iccPublicKey + "]");
+
+        LogUtil.d(TAG, "retrievalICCPublicKey success");
+        return true;
     }
 
     private boolean retrievalIssuerPublicKey() {

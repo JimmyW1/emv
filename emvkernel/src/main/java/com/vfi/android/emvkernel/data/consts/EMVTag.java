@@ -160,5 +160,18 @@ public class EMVTag {
      */
     public final static String tag9F49 = "9F49";
 
+    /**
+     * optional Static Data Authentication Tag List
+     */
     public final static String tag9F4A = "9F4A";
+
+    /**
+     * Data Authentication Code
+     */
+    public final static String tag9F45 = "9F45";
+
+    /**
+     * Unpredictable Number , 4 bytes
+     */
+    public final static String tag9F37 = "9F37";
 }

@@ -12,6 +12,7 @@ public class EMVResultCode {
     public static final int ERR_READ_RECORD_FAILED = 1009;
     public static final int ERR_MISSING_MANDATORY_DATA = 1010;
     public static final int ERR_CARD_HOLDER_CANCELLED = 1011;
+    // SDA
     public static final int ERR_MISSING_CERT_AUTH_PUBLIC_KEY = 1012;
     public static final int ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_AUTHORITY_PUB_KEY = 1013;
     public static final int ERR_ISSUER_PUB_KEY_RECOVERED_FAILED = 1014;
@@ -31,4 +32,15 @@ public class EMVResultCode {
     public static final int ERR_READ_OFFLINE_STATIC_DATA_RECORD_NOT_CODED_WITH_TAG70 = 1028;
     public static final int ERR_OPTIONAL_STATIC_DATA_AUTHENTICATION_TAG_LIST_NOT_ONLY_TAG82 = 1029;
     public static final int ERR_CALCULATE_HASH_IS_NOT_THE_SAME_WITH_RECOVERED_HASH_RESULT = 1030;
+    // DDA
+    public static final int ERR_MISSING_DDOL = 1031;
+    public static final int ERR_MISSING_UNPREDICTABLE_NUMBER = 1032;
+    public static final int ERR_EXECUTE_INTERNAL_AUTHENTICATE_FAILED = 1033;
+    public static final int ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_ICC_PUBLIC_KEY_CERT = 1034;
+    public static final int ERR_ICC_PUB_KEY_RECOVERED_FAILED = 1035;
+    public static final int ERR_ICC_PUB_KEY_RECOVERED_DATA_TRAILER_NOT_BC = 1036;
+    public static final int ERR_ICC_PUB_KEY_RECOVERED_DATA_HEADER_NOT_6A = 1037;
+    public static final int ERR_ICC_PUB_KEY_RECOVERED_DATA_CERTIFICATE_FORMAT_NOT_04 = 1038;
+    public static final int ERR_ICC_PUB_KEY_RECOVERED_DATA_CERTIFICATE_HASH_WRONG = 1039;
+    public static final int ERR_VERIFY_APPLICATION_PAN_FAILED = 1040;
 }
