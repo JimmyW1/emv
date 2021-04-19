@@ -8,6 +8,7 @@ import com.vfi.android.emvkernel.data.beans.EmvParams;
 import com.vfi.android.emvkernel.data.beans.EmvTransData;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
+import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
@@ -94,6 +95,10 @@ public abstract class AbstractEmvState implements IEmvState {
                 tagMap.put(tag, selectAppTerminalParamsMap.get(tag));
             }
         }
+
+        String unpredictableNumber = SecurityUtil.getRandomBytesAndBreakDown(4);
+        LogUtil.d(TAG, "TAG9F37(Unpredictable Number)=[" + unpredictableNumber + "]");
+        tagMap.put(TerminalTag.tag9F37, unpredictableNumber);
     }
 
     public IEmvHandler getEmvHandler() {

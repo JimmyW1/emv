@@ -311,6 +311,12 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doDDAProcess() {
+        if (!retrievalICCPublicKey()) {
+            LogUtil.d(TAG, "Retrieval ICC Public Key failed!!");
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
         String ddolTags = getDDOL();
         if (ddolTags == null || ddolTags.length() <= 0) {
             LogUtil.d(TAG, "DDA Missing DDOL");
@@ -345,19 +351,122 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         //InternalAuthenticate
         byte[] ret = executeApduCmd(new InternalAuthenticateCmd(ddolTagsData));
         InternalAuthenticateResponse response = new InternalAuthenticateResponse(ret);
-        if (!response.isSuccess()) {
+        if (!response.isSuccess() || response.getTag9F4B() == null || response.getTag9F4B().length() == 0) {
             LogUtil.d(TAG, "Execute InternalAuthenticate failed. response status=[" + response.getStatus() + "]");
             setErrorCode(EMVResultCode.ERR_EXECUTE_INTERNAL_AUTHENTICATE_FAILED);
             finishOfflineDataAuthentication(DDA, false);
             return;
         }
+        response.saveTags(getEmvTransData().getTagMap());
 
-        if (!retrievalICCPublicKey()) {
-
+        //1. If the Signed Dynamic Application Data has a length different from the
+        //length of the ICC Public Key Modulus, DDA has failed.
+        String signedDynamicApplicationData = response.getTag9F4B();
+        if (signedDynamicApplicationData.length() != iccPublicKey.length()) {
+            LogUtil.d(TAG, "Signed Dynamic Application Data has a length different from icc public key");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_LEN_DIFFERENT_FROM_ICC_PUBLIC_KEY);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
         }
 
+        //2. To obtain the recovered data specified in Table 17, apply the recovery
+        //function as specified in Annex A2.1 on the Signed Dynamic Application
+        //Data using the ICC Public Key in conjunction with the corresponding
+        //algorithm. If the Recovered Data Trailer is not equal to 'BC', DDA has
+        //failed.
+        byte[] iccPublicKeyModulesBytes = StringUtil.hexStr2Bytes(iccPublicKey);
         byte[] iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F47));
+        byte[] iccSignDataRecoveredBytes = SecurityUtil.signVerify(StringUtil.hexStr2Bytes(response.getTag9F4B()), iccPublicKeyExponent, iccPublicKeyModulesBytes);
+        String iccSignDataRecoveredHex = StringUtil.byte2HexStr(iccSignDataRecoveredBytes);
+        LogUtil.d(TAG, "iccSignDataRecoveredHex=[" + iccSignDataRecoveredHex + "]");
 
+        if (iccSignDataRecoveredHex == null || iccSignDataRecoveredHex.length() < 25 * 2) {
+            LogUtil.d(TAG, "Recovered data failed.");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_FAILED);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        if (!iccSignDataRecoveredHex.endsWith("BC")) {
+            LogUtil.d(TAG, "Recovered Data Trailer is not equal to 'BC'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_DATA_TRAILER_NOT_BC);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        //3. Check the Recovered Data Header. If it is not '6A', DDA has failed.
+        if (!iccSignDataRecoveredHex.startsWith("6A")) {
+            LogUtil.d(TAG, "Recovered Data Header is not equal to '6A'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_DATA_HEADER_NOT_6A);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        //4. Check the Signed Data Format. If it is not '05', DDA has failed.
+        if (!iccSignDataRecoveredHex.substring(2, 4).equals("05")) {
+            LogUtil.d(TAG, "Recovered Signed Data Format not equal to '05'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_FORMAT_NOT_05);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        //5. Concatenate from left to right the second to the sixth data elements in
+        //Table 17 (that is, Signed Data Format through Pad Pattern), followed by
+        //the data elements specified by the DDOL.
+        //6. Apply the indicated hash algorithm (derived from the Hash Algorithm
+        //Indicator) to the result of the concatenation of the previous step to
+        //produce the hash result.
+        //7. Compare the calculated hash result from the previous step with the
+        //recovered Hash Result. If they are not the same, DDA has failed.
+
+        String hexData = iccSignDataRecoveredHex.substring(2, iccSignDataRecoveredHex.length() - 2 - 40);
+        hexData += ddolTagsData;
+        LogUtil.d(TAG, "hexData=[" + hexData + "]");
+
+        int hashIndicatorStartIndex = (1+1) * 2;
+        String hashIndicator = iccSignDataRecoveredHex.substring(hashIndicatorStartIndex, hashIndicatorStartIndex + 2);
+        LogUtil.d(TAG, "hashIndicator=[" + hashIndicator + "]");
+        if (hashIndicator.equals("01")) {
+            String hashHex = SecurityUtil.calculateSha1(hexData);
+            String signedDynamicApplicationDataHash = iccSignDataRecoveredHex.substring(iccSignDataRecoveredHex.length() - 2 - 40, iccSignDataRecoveredHex.length() - 2);
+            LogUtil.d(TAG, "calculate hash hex=[" + hashHex + "], signedDynamicApplicationDataHash hash hex=[" + signedDynamicApplicationDataHash + "]");
+
+            if (!signedDynamicApplicationDataHash.equals(hashHex)) {
+                LogUtil.d(TAG, "Hash not the same, DDA failed.");
+                setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_DATA_HASH_WRONG);
+                finishOfflineDataAuthentication(DDA, false);
+                return;
+            }
+        } else {
+            LogUtil.d(TAG, "Hash indicator =[" + hashIndicator + "] not support");
+            setErrorCode(EMVResultCode.ERR_HASH_INDICATOR_ALGO_NOT_SUPPORT);
+            finishOfflineDataAuthentication(DDA, false);
+            return;
+        }
+
+        int iccDynamicDataLengthStartIndex = (1+1+1) * 2;
+        String iccDynamicDataLengthHex = iccSignDataRecoveredHex.substring(iccDynamicDataLengthStartIndex, iccDynamicDataLengthStartIndex + 2);
+        int iccDynamicDataLength = StringUtil.parseInt(iccDynamicDataLengthHex, 16, 0);
+        LogUtil.d(TAG, "iccDynamicDataLength=[" + iccDynamicDataLength + "]");
+
+        int iccDynamicDataStartIndex = (1+1+1+1) * 2;
+        String iccDynamicDataHex = iccSignDataRecoveredHex.substring(iccDynamicDataStartIndex, iccDynamicDataStartIndex + iccDynamicDataLength * 2);
+        LogUtil.d(TAG, "iccDynamicDataHex=[" + iccDynamicDataHex + "]");
+
+        // The length LDD of the ICC Dynamic Data satisfies 0 ≤ LDD ≤ NIC − 25. The 3-9
+        //leftmost bytes of the ICC Dynamic Data shall consist of the 1-byte length of
+        //the ICC Dynamic Number, followed by the 2-8 byte value of the ICC Dynamic
+        //Number (tag '9F4C', 2-8 bytes binary). The ICC Dynamic Number is a
+        //time-variant parameter generated by the ICC (it can for example be an
+        //unpredictable number or a counter incremented each time the ICC receives
+        //an INTERNAL AUTHENTICATE command).
+        int iccDynamicNumberLen = StringUtil.parseInt(iccDynamicDataHex.substring(0, 2), 16, 0);
+        LogUtil.d(TAG, "iccDynamicNumberLen=[" + iccDynamicNumberLen + "]");
+        String iccDynamicNumber = iccDynamicDataHex.substring(2, 2 + iccDynamicNumberLen * 2);
+        LogUtil.d(TAG, "iccDynamicNumber=[" + iccDynamicNumber + "]");
+        getEmvTransData().getTagMap().put(EMVTag.tag9F4C, iccDynamicNumber);
+
+        LogUtil.d(TAG, "Perform DDA success");
     }
 
     private String getDDOL() {
@@ -368,6 +477,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         } else {
             DDOL = getEmvTransData().getSelectAppTerminalParamsMap().get(ParamTag.DEFAULT_DDOL);
             LogUtil.d(TAG, "Terminal deafult DDOL=[" + DDOL + "]");
+            getEmvTransData().getTagMap().put(EMVTag.tag9F49, DDOL);
         }
 
         return DDOL;

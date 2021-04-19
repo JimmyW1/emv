@@ -15,6 +15,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Random;
 import java.util.TreeSet;
 
 import javax.crypto.Cipher;
@@ -81,5 +82,16 @@ public class SecurityUtil {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public static String getRandomBytesAndBreakDown(int count) {
+        Random random = new Random();
+        byte[] randomBytes = new byte[count];
+        random.nextBytes(randomBytes);
+
+        String randomStr = StringUtil.byte2HexStr(randomBytes);
+        LogUtil.d(TAG, "randomBytes=" + randomStr);
+
+        return randomStr.toUpperCase();
     }
 }
