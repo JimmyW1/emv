@@ -61,13 +61,13 @@ public class DbManager implements IDbOperation {
         String terminalCap1 = "9F3303E0F8A0"; // support SDA CDA
         String terminalCap2 = "9F3303E0F840"; // support DDA
         String terminalParameters = terminalCap2;
-        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters);
-        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters);
-        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters);
-        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters);
-        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters);
-        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters);
-        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters);
+        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters + "9F09020200");
+        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters + "9F09020200");
+        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters + "9F09020002");
+        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters + "9F09020030");
+        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters + "9F09020030");
+        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters + "9F09020200");
+        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters + "9F09020001");
 
         return appParamList;
     }

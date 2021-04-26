@@ -19,7 +19,6 @@ import com.vfi.android.emvkernel.utils.DOLUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

@@ -1,6 +1,5 @@
 package com.vfi.android.emvkernel.data.beans;
 
-import com.vfi.android.emvkernel.corelogical.apdu.ReadRecordResponse;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;

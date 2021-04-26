@@ -10,6 +10,8 @@ import java.util.Arrays;
 
 public class TVR {
     private final String TAG = TAGS.EMV_FLOW;
+    private byte[] tvr = new byte[5];
+
     // byte 1
     public static final String FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED = "FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED";
     public static final String FLAG_SDA_FAILED = "FLAG_SDA_FAILED";
@@ -41,8 +43,6 @@ public class TVR {
     public static final String FLAG_ISSUER_AUTHENTICATION_FAILED = "FLAG_ISSUER_AUTHENTICATION_FAILED";
     public static final String FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC = "FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC";
     public static final String FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC = "FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC";
-
-    byte[] tvr = new byte[5];
 
     public void clear() {
         Arrays.fill(tvr, (byte) 0x00);

@@ -10,6 +10,7 @@ import com.vfi.android.emvkernel.corelogical.states.base.IEmvState;
 import com.vfi.android.emvkernel.corelogical.states.common.IdleState;
 import com.vfi.android.emvkernel.corelogical.states.common.StopState;
 import com.vfi.android.emvkernel.corelogical.states.contact.CardConfirmState;
+import com.vfi.android.emvkernel.corelogical.states.contact.CardHolderVerificationState;
 import com.vfi.android.emvkernel.corelogical.states.contact.OfflineDataAuthenticationState;
 import com.vfi.android.emvkernel.corelogical.states.contact.ProcessingRestrictionsState;
 import com.vfi.android.emvkernel.corelogical.states.contact.ReadCardState;
@@ -57,6 +58,9 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
                 break;
             case STATE_PROCESSING_RESTRICTIONS:
                 emvState = new ProcessingRestrictionsState();
+                break;
+            case STATE_CARDHOLDER_VERIFICATION:
+                emvState = new CardHolderVerificationState();
                 break;
         }
 

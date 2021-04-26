@@ -9,6 +9,7 @@ public class MessageType {
     public static final String MSG_START_CARD_CONFIRM = "MSG_START_CARD_CONFIRM";
     public static final String MSG_START_OFFLINE_DATA_AUTH = "MSG_START_OFFLINE_DATA_AUTH";
     public static final String MSG_START_PROCESSING_RESTRICTIONS = "MSG_START_PROCESSING_RESTRICTIONS";
+    public static final String MSG_START_CARDHOLDER_VERIFICATION = "MSG_START_CARDHOLDER_VERIFICATION";
 
     // app messages
     public static final String MSG_START_CARDHOLDER_SELECT = "MSG_START_CARDHOLDER_SELECT";

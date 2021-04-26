@@ -1,5 +1,7 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.libtools.utils.StringUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +13,21 @@ public class EmvParams {
     private List<CTLSKernelIndicator> ctlsKernelIndicatorList;
     private String amount; // Authorised amount 9F02
     private String transCurrencyCode; // Transaction Currency Code 5F2A
+    /**
+     * Processing code
+     * The following is a table specifying the message type and processing code for each transaction type.
+     *
+     * Transaction	    Message type	Processing code
+     * Authorization	0100	        00 a0 0x
+     * Balance inquiry	0100            31 a0 0x
+     * Sale	            0200	        00 a0 0x
+     * Cash	            0200            01 a0 0x
+     * Credit Voucher	0200            20 a0 0x
+     * Void	            0200            02 a0 0x
+     * Mobile topup	                    57 a0 0x
+     */
+    private String transProcessCode; // ISO 8583:1987 Processing Code
+    private String terminalCountryCode; // Terminal country code
     /**
      * This is used for response tags in confirm card info {@link CardInfo}
      */
@@ -90,5 +107,24 @@ public class EmvParams {
 
     public void setCardConfirmTagList(List<String> cardConfirmTagList) {
         this.cardConfirmTagList = cardConfirmTagList;
+    }
+
+    public String getTransProcessCode() {
+        if (transProcessCode == null || transProcessCode.length() != 2) {
+            transProcessCode = StringUtil.getNonNullStringRightPadding(transProcessCode, 2);
+        }
+        return transProcessCode;
+    }
+
+    public void setTransProcessCode(String transProcessCode) {
+        this.transProcessCode = transProcessCode;
+    }
+
+    public String getTerminalCountryCode() {
+        return terminalCountryCode;
+    }
+
+    public void setTerminalCountryCode(String terminalCountryCode) {
+        this.terminalCountryCode = terminalCountryCode;
     }
 }

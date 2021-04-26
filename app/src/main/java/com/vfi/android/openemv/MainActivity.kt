@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
             emvParams.isSupportCardHolderSelect = true;
             emvParams.amount = "00000555555";
             emvParams.transCurrencyCode = "156";
+            emvParams.transProcessCode = "00"; // purchase
             emvManager.initEmvFlow(emvParams)
             var emvHandler = EmvHandler(this, emvManager)
             emvManager.startEMVFlow(emvHandler)

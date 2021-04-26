@@ -10,6 +10,7 @@ import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.DOLBean;
 import com.vfi.android.emvkernel.data.beans.tagbeans.AIP;
+import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
@@ -467,6 +468,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         getEmvTransData().getTagMap().put(EMVTag.tag9F4C, iccDynamicNumber);
 
         LogUtil.d(TAG, "Perform DDA success");
+        finishOfflineDataAuthentication(DDA, true);
     }
 
     private String getDDOL() {
@@ -484,13 +486,12 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void finishOfflineDataAuthentication(int supportMode, boolean isSuccess) {
-        if (isSuccess) {
-
-        } else {
+        if (!isSuccess) {
             markTvrOfflineDynamicDataAuthenticationFailed(supportMode);
-            jumpToState(EmvStateType.STATE_PROCESSING_RESTRICTIONS);
-            sendMessage(new Msg_StartProcessingRestrictions());
         }
+        getEmvTransData().getTsi().markFlag(TSI.FLAG_OFFLINE_DATA_AUTH_WAS_PERFORMED, true);
+        jumpToState(EmvStateType.STATE_PROCESSING_RESTRICTIONS);
+        sendMessage(new Msg_StartProcessingRestrictions());
     }
 
     private boolean retrievalCertificationAuthorityPublicKey() {

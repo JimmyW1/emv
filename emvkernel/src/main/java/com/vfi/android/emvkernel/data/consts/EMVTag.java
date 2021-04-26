@@ -187,4 +187,45 @@ public class EMVTag {
      * an INTERNAL AUTHENTICATE command).
      */
     public final static String tag9F4C = "9F4C";
+
+    /**
+     * Application Version Number Version number assigned by the payment system for the application
+     * ICC b '70' or '77' '9F08' 2
+     */
+    public final static String tag9F08 = "9F08";
+
+    /**
+     * Application Usage Control Indicates issuer’s specified restrictions on the geographic usage
+     * and services allowed for the application
+     * ICC b '70' or '77' '9F07' 2
+     *
+     * Application Usage Control Byte 1 (Leftmost)
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Valid for domestic cash transactions
+     * x 1 x x x x x x Valid for international cash transactions
+     * x x 1 x x x x x Valid for domestic goods
+     * x x x 1 x x x x Valid for international goods
+     * x x x x 1 x x x Valid for domestic services
+     * x x x x x 1 x x Valid for international services
+     * x x x x x x 1 x Valid at ATMs
+     * x x x x x x x 1 Valid at terminals other than ATMs
+     *
+     * Application Usage Control Byte 2 (Rightmost)
+     * b8 b7 b6 b5 b4 b3 b2 b1 Meaning
+     * 1 x x x x x x x Domestic cashback allowed
+     * x 1 x x x x x x International cashback allowed
+     * x x 0 x x x x x RFU
+     * x x x 0 x x x x RFU
+     * x x x x 0 x x x RFU
+     * x x x x x 0 x x RFU
+     * x x x x x x 0 x RFU
+     * x x x x x x x 0 RFU
+     */
+    public final static String tag9F07 = "9F07";
+
+    /**
+     * Issuer Country Code Indicates the country of the issuer according to ISO 3166
+     * ICC n 3 '70' or '77' '5F28' 2
+     */
+    public final static String tag5F28 = "5F28";
 }

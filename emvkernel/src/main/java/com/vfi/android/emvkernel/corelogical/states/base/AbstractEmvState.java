@@ -87,9 +87,19 @@ public abstract class AbstractEmvState implements IEmvState {
             tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
         }
 
+        String transactionType = emvParams.getTransProcessCode();
+        transactionType = StringUtil.getNonNullStringRightPadding(transactionType, 2);
+        tagMap.put(TerminalTag.tag9C, transactionType);
+
+        String terminalCountryCode = emvParams.getTerminalCountryCode();
+        if (terminalCountryCode != null && terminalCountryCode.length() > 0) {
+            terminalCountryCode = StringUtil.getNonNullStringLeftPadding(terminalCountryCode, 4);
+            tagMap.put(TerminalTag.tag9F1A, terminalCountryCode);
+        }
+
         // put selected terminal TAGS to current tag Map
         Map<String, String> selectAppTerminalParamsMap = getEmvTransData().getSelectAppTerminalParamsMap();
-        List<String> terminalTagList = Arrays.asList(TerminalTag.tag9F33);
+        List<String> terminalTagList = Arrays.asList(TerminalTag.tag9F33, TerminalTag.tag9F09, TerminalTag.tag9F1A, TerminalTag.tag5F2A);
         for (String tag : terminalTagList) {
             if (selectAppTerminalParamsMap.containsKey(tag)) {
                 tagMap.put(tag, selectAppTerminalParamsMap.get(tag));
