@@ -69,7 +69,7 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onRequestOfflinePIN(retryTimes: Int) {
-        TODO("Not yet implemented")
+
     }
 
     override fun onTransactionResult(emvResultInfo: EmvResultInfo?) {

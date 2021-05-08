@@ -1,8 +1,10 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.data.beans.tagbeans.CvmResult;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
+import com.vfi.android.emvkernel.interfaces.Callback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,12 +23,29 @@ public class EmvTransData {
     private Map<String, String> tagMap;
     private TVR tvr;
     private TSI tsi;
+    private CvmResult cvmResult;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
         tagMap = new HashMap<>();
-        tvr = new TVR();
-        tsi = new TSI();
+        tvr = new TVR(new Callback() {
+            @Override
+            public void onDataChanged(String data) {
+                updateTVR();
+            }
+        });
+        tsi = new TSI(new Callback() {
+            @Override
+            public void onDataChanged(String data) {
+                updateTSI();
+            }
+        });
+        cvmResult = new CvmResult(new Callback() {
+            @Override
+            public void onDataChanged(String data) {
+                updateCvmResult();
+            }
+        });
     }
 
     public void resetEmvTransData() {
@@ -45,9 +64,11 @@ public class EmvTransData {
     public void clearTVRAndTSI() {
         tvr.clear();
         tsi.clear();
+        cvmResult.clear();
 
         updateTVR();
         updateTSI();
+        updateCvmResult();
     }
 
     public void updateTVR() {
@@ -56,6 +77,10 @@ public class EmvTransData {
 
     public void updateTSI() {
         tagMap.put(TerminalTag.tag9B, tsi.getTSIHex());
+    }
+
+    public void updateCvmResult() {
+        tagMap.put(TerminalTag.tag9F34, cvmResult.getTVRHex());
     }
 
     public List<EmvApplication> getCandidateList() {
@@ -116,6 +141,10 @@ public class EmvTransData {
 
     public TVR getTvr() {
         return tvr;
+    }
+
+    public CvmResult getCvmResult() {
+        return cvmResult;
     }
 
     public Map<String, String> getSelectAppTerminalParamsMap() {

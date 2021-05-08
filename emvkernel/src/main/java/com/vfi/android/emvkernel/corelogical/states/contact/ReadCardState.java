@@ -133,6 +133,16 @@ public class ReadCardState extends AbstractEmvState {
             isMissingMandatoryData = true;
         }
 
+        //If the terminal encounters formatting errors in the CVM List such as a list with
+        //an odd number of bytes (that is, with an incomplete CVM Rule), the terminal
+        //shall terminate the transaction as specified in Book 3 section 7.5.
+        if (tagMap.containsKey(EMVTag.tag8E)) {
+            if (tagMap.get(EMVTag.tag8E).length() % 2 != 0) {
+                LogUtil.d(TAG, "Wrong tag 8E, cvm list with an odd number of bytes.");
+                isMissingMandatoryData = true;
+            }
+        }
+
         LogUtil.d(TAG, "isMissingMandatoryData=[" + isMissingMandatoryData + "]");
         return isMissingMandatoryData;
     }

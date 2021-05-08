@@ -81,12 +81,6 @@ public abstract class AbstractEmvState implements IEmvState {
             tagMap.put(TerminalTag.tag9F02, "000000000000");
         }
 
-        String transCurrencyCode = emvParams.getTransCurrencyCode();
-        // TODO after select application use emv parameter transaction currency code replace this one.
-        if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
-            tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
-        }
-
         String transactionType = emvParams.getTransProcessCode();
         transactionType = StringUtil.getNonNullStringRightPadding(transactionType, 2);
         tagMap.put(TerminalTag.tag9C, transactionType);
@@ -99,11 +93,18 @@ public abstract class AbstractEmvState implements IEmvState {
 
         // put selected terminal TAGS to current tag Map
         Map<String, String> selectAppTerminalParamsMap = getEmvTransData().getSelectAppTerminalParamsMap();
-        List<String> terminalTagList = Arrays.asList(TerminalTag.tag9F33, TerminalTag.tag9F09, TerminalTag.tag9F1A, TerminalTag.tag5F2A);
+        List<String> terminalTagList = Arrays.asList(TerminalTag.tag9F33, TerminalTag.tag9F09, TerminalTag.tag9F1A, TerminalTag.tag5F2A, TerminalTag.tag9F35);
         for (String tag : terminalTagList) {
             if (selectAppTerminalParamsMap.containsKey(tag)) {
                 tagMap.put(tag, selectAppTerminalParamsMap.get(tag));
             }
+        }
+
+        // if emv param set trans currency code, will use this value, if not set will use Application Parameter value
+        String transCurrencyCode = emvParams.getTransCurrencyCode();
+        // TODO after select application use emv parameter transaction currency code replace this one.
+        if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
+            tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
         }
 
         String unpredictableNumber = SecurityUtil.getRandomBytesAndBreakDown(4);

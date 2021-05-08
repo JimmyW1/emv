@@ -1,5 +1,6 @@
 package com.vfi.android.emvkernel.data.beans.tagbeans;
 
+import com.vfi.android.emvkernel.interfaces.Callback;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
@@ -11,6 +12,7 @@ import java.util.Arrays;
 public class TVR {
     private final String TAG = TAGS.EMV_FLOW;
     private byte[] tvr = new byte[5];
+    private Callback callback;
 
     // byte 1
     public static final String FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED = "FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED";
@@ -44,6 +46,10 @@ public class TVR {
     public static final String FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC = "FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC";
     public static final String FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC = "FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC";
 
+    public TVR(Callback callback) {
+        this.callback = callback;
+    }
+
     public void clear() {
         Arrays.fill(tvr, (byte) 0x00);
     }
@@ -69,6 +75,10 @@ public class TVR {
             tvr[bytePosition] |= bitPosition;
         } else {
             tvr[bytePosition] &= ~bitPosition;
+        }
+
+        if (callback != null) {
+            callback.onDataChanged(getTVRHex());
         }
     }
 }

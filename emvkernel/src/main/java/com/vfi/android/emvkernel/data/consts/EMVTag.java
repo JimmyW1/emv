@@ -228,4 +228,30 @@ public class EMVTag {
      * ICC n 3 '70' or '77' '5F28' 2
      */
     public final static String tag5F28 = "5F28";
+
+    /**
+     * Cardholder Verification Method (CVM) List Identifies a method of verification of the cardholder supported by the application
+     * ICC b '70' or '77' '8E' 10-252
+     */
+    public final static String tag8E = "8E";
+
+    /**
+     * ATC (tag '9F36')
+     */
+    public final static String tag9F36 = "9F36";
+
+    /**
+     * Last Online ATC Register (tag '9F13')
+     */
+    public final static String tag9F13 = "9F13";
+
+    /**
+     * PIN Try Counter (tag '9F17')
+     */
+    public final static String tag9F17 = "9F17";
+
+    /**
+     * Log Format (tag '9F4F')
+     */
+    public final static String tag9F4F = "9F4F";
 }

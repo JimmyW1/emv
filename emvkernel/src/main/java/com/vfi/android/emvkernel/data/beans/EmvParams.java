@@ -14,7 +14,7 @@ public class EmvParams {
     private String amount; // Authorised amount 9F02
     private String transCurrencyCode; // Transaction Currency Code 5F2A
     /**
-     * Processing code
+     * Processing code  {@link com.vfi.android.emvkernel.data.consts.TransType}
      * The following is a table specifying the message type and processing code for each transaction type.
      *
      * Transaction	    Message type	Processing code
