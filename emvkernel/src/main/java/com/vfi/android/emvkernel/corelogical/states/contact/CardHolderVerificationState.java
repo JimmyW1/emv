@@ -2,6 +2,9 @@ package com.vfi.android.emvkernel.corelogical.states.contact;
 
 import com.vfi.android.emvkernel.corelogical.apdu.GetDataCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.GetDataResponse;
+import com.vfi.android.emvkernel.corelogical.apdu.VerifyCmd;
+import com.vfi.android.emvkernel.corelogical.apdu.VerifyResponse;
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputPinFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartCardHolderVerification;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartTerminalRiskManagement;
@@ -20,6 +23,8 @@ import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.data.consts.TransType;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
+
+import java.util.Arrays;
 
 public class CardHolderVerificationState extends AbstractEmvState {
     private int currentCvmRuleIndex;
@@ -40,6 +45,8 @@ public class CardHolderVerificationState extends AbstractEmvState {
         if (message instanceof Msg_StartCardHolderVerification) {
             pinTryCounter = -1;
             processStartCardHolderVerificationMessage(message);
+        } else if (message instanceof Msg_InputPinFinished) {
+            processInputPinFinishedMessage(message);
         }
     }
 
@@ -66,6 +73,87 @@ public class CardHolderVerificationState extends AbstractEmvState {
 
         currentCvmRuleIndex = 0;
         doCvmVerification();
+    }
+
+    private void processInputPinFinishedMessage(Message message) {
+        Msg_InputPinFinished msg = (Msg_InputPinFinished) message;
+        if (msg.isCancelled()) {
+            // TODO confirm if need stop emv and how to set tvr tsi flag
+            LogUtil.d(TAG, "Input pin cancelled.");
+            stopEmv();
+            return;
+        }
+
+        if (msg.getPin() == null || msg.getPin().length == 0) {
+            LogUtil.d(TAG, "Bypass pin happened");
+            // TODO
+            return;
+        }
+
+        CvmRule cvmRule = cvmList.getCvmRules().get(currentCvmRuleIndex);
+        byte cvmType = (byte) (cvmRule.getCvmCode() & 0x3F);
+        switch (cvmType) {
+            case CvmType.PLAINTEXT_PIN_VERIFICATION_ICC:
+            case CvmType.PLAINTEXT_PIN_VERIFICATION_ICC_AND_SIGNATURE:
+                if (doPlainTextPinVerification(msg.getPin())) {
+
+                } else {
+
+                }
+                break;
+            case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC:
+            case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE:
+                if (doEncipheredPinVerification(msg.getPin())) {
+
+                } else {
+
+                }
+                break;
+            case CvmType.ENCIPHERED_PIN_VERIFIED_ONLINE:
+            case CvmType.SIGNATURE:
+            case CvmType.NO_CVM_REQUIRED:
+                break;
+        }
+
+        processCvmVerificationResult(true);
+    }
+
+    private boolean doPlainTextPinVerification(byte[] pin) {
+        byte[] pinBlock = new byte[8];
+        Arrays.fill(pinBlock, (byte) 0xFF);
+        /**
+         * The plaintext offline PIN block shall be formatted as follows:
+         * C N P P P P P/F P/F P/F P/F P/F P/F P/F P/F F F
+         * where:
+         * Name Value
+         * C Control field 4 bit binary number with value of 0010 (Hex '2')
+         * N PIN length 4 bit binary number with permissible values of 0100 to 1100 (Hex '4' to 'C')
+         * P PIN digit 4 bit binary number with permissible values of 0000 to 1001 (Hex '0' to '9')
+         * P/F PIN/filler Determined by PIN length
+         * F Filler 4 bit binary number with a value of 1111 (Hex 'F')
+         */
+        pinBlock[0] = (byte) (0x20 | pin.length);
+        for (int i = 0; i < pin.length / 2; i++) {
+            pinBlock[1+i] = (byte) ((pin[i*2] << 4 & 0xF0) | (pin[i*2+1] & 0x0F));
+        }
+
+        if (pin.length % 2 != 0) {
+            pinBlock[(pin.length + 1) / 2] = (byte) (pin[pin.length - 1] << 4 | 0x0F);
+        }
+
+        LogUtil.d(TAG, "pinBlock hex=[" + StringUtil.byte2HexStr(pinBlock) + "]");
+
+        // The data field of the command message contains the value field of tag '99'.
+        getEmvTransData().getTagMap().put(TerminalTag.tag99, StringUtil.byte2HexStr(pinBlock));
+        byte[] result = executeApduCmd(new VerifyCmd(false, pinBlock));
+        VerifyResponse response = new VerifyResponse(result);
+        // TODO
+
+        return true;
+    }
+
+    private boolean doEncipheredPinVerification(byte[] pin) {
+        return true;
     }
 
     private void doCvmVerification() {

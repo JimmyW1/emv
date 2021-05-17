@@ -46,4 +46,9 @@ public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
     public void importCardConfirmResult(boolean pass) {
 
     }
+
+    @Override
+    public void importPin(int option, byte[] pin) {
+
+    }
 }

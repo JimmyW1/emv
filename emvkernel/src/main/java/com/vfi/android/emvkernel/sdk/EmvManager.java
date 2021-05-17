@@ -61,6 +61,10 @@ public final class EmvManager {
         iEmvOperation.importCardConfirmResult(pass);
     }
 
+    public void importPin(int option, byte[] pin) {
+        iEmvOperation.importPin(option, pin);
+    }
+
     public void setEmvTag(String tag, String value) {
         iEmvOperation.setEmvTag(tag, value);
     }

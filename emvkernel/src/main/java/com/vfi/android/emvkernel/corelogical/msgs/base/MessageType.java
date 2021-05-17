@@ -16,4 +16,5 @@ public class MessageType {
     public static final String MSG_START_CARDHOLDER_SELECT = "MSG_START_CARDHOLDER_SELECT";
     public static final String MSG_CARDHOLDER_SELECT_FINISHED = "MSG_CARDHOLDER_SELECT_FINISHED";
     public static final String MSG_CARDHOLDER_CONFIRM = "MSG_CARDHOLDER_CONFIRM";
+    public static final String MSG_INPUT_PIN_FINISHED = "MSG_INPUT_PIN_FINISHED";
 }

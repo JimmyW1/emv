@@ -9,6 +9,7 @@ import com.vfi.android.emvkernel.interfaces.IEmvHandler
 import com.vfi.android.emvkernel.sdk.EmvManager
 import com.vfi.android.libtools.consts.TAGS
 import com.vfi.android.libtools.utils.LogUtil
+import com.vfi.android.openemv.utils.DialogUtil
 
 class EmvHandler : IEmvHandler {
     private var emvManager:EmvManager;
@@ -69,7 +70,18 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onRequestOfflinePIN(retryTimes: Int) {
-
+        var handler = Handler(Looper.getMainLooper());
+        handler.post {
+            var CONFIRM = 1;
+            var CANCEL = 0;
+            DialogUtil.showInputDialog(context, "Please Input Offline Pin:", DialogUtil.InputDialogListener() { inputStr: String, isConfirm: Boolean ->
+                if (isConfirm) {
+                    emvManager.importPin(CONFIRM, inputStr.toByteArray())
+                } else {
+                    emvManager.importPin(CANCEL, null)
+                }
+            });
+        };
     }
 
     override fun onTransactionResult(emvResultInfo: EmvResultInfo?) {

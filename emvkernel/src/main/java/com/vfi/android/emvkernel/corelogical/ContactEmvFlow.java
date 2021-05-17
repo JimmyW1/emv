@@ -2,6 +2,7 @@ package com.vfi.android.emvkernel.corelogical;
 
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderConfirm;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputPinFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
@@ -105,5 +106,10 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
     @Override
     public void importCardConfirmResult(boolean pass) {
         sendMessage(new Msg_CardHolderConfirm(!pass));
+    }
+
+    @Override
+    public void importPin(int option, byte[] pin) {
+        sendMessage(new Msg_InputPinFinished(option == 0, pin));
     }
 }

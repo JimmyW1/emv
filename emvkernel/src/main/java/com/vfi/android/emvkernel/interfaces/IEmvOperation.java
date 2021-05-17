@@ -11,6 +11,7 @@ public interface IEmvOperation {
     void stopEmvFlow();
     void importSelectApplication(boolean isCancelled, AppInfo appInfo);
     void importCardConfirmResult(boolean pass);
+    void importPin(int option, byte[] pin);
     void setEmvTag(String tag, String value);
     String getEmvTag(String tag);
     String getEmvTags(List<String> tagList);
