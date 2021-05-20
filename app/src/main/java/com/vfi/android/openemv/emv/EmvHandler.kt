@@ -3,6 +3,7 @@ package com.vfi.android.openemv.emv
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.vfi.android.emvkernel.data.beans.*
 import com.vfi.android.emvkernel.interfaces.IEmvHandler
@@ -74,6 +75,7 @@ class EmvHandler : IEmvHandler {
         handler.post {
             var CONFIRM = 1;
             var CANCEL = 0;
+            Toast.makeText(context, "retryTimes=$retryTimes", Toast.LENGTH_LONG).show();
             DialogUtil.showInputDialog(context, "Please Input Offline Pin:", DialogUtil.InputDialogListener() { inputStr: String, isConfirm: Boolean ->
                 if (isConfirm) {
                     emvManager.importPin(CONFIRM, inputStr.toByteArray())

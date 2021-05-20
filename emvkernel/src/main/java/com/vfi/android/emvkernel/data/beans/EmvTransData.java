@@ -1,8 +1,11 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.data.beans.tagbeans.AIP;
 import com.vfi.android.emvkernel.data.beans.tagbeans.CvmResult;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
+import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
+import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.interfaces.Callback;
 
@@ -23,6 +26,9 @@ public class EmvTransData {
     private Map<String, String> tagMap;
     private TVR tvr;
     private TSI tsi;
+    private AIP aip;
+    private TerminalCapabilities terminalCap;
+
     private CvmResult cvmResult;
 
     public EmvTransData() {
@@ -80,7 +86,7 @@ public class EmvTransData {
     }
 
     public void updateCvmResult() {
-        tagMap.put(TerminalTag.tag9F34, cvmResult.getTVRHex());
+        tagMap.put(TerminalTag.tag9F34, cvmResult.getCvmResultHex());
     }
 
     public List<EmvApplication> getCandidateList() {
@@ -177,5 +183,19 @@ public class EmvTransData {
 
     public void setExistStaticDataRecordNotCodeWithTag70(boolean existStaticDataRecordNotCodeWithTag70) {
         isExistStaticDataRecordNotCodeWithTag70 = existStaticDataRecordNotCodeWithTag70;
+    }
+
+    public AIP getAIP() {
+        if (aip == null && tagMap.containsKey(EMVTag.tag82)) {
+            aip = new AIP(tagMap.get(EMVTag.tag82));
+        }
+        return aip;
+    }
+
+    public TerminalCapabilities getTerminalCap() {
+        if (terminalCap == null && tagMap.containsKey(TerminalTag.tag9F33)) {
+            terminalCap = new TerminalCapabilities(tagMap.get(TerminalTag.tag9F33));
+        }
+        return terminalCap;
     }
 }

@@ -97,8 +97,8 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     private int checkSupportOfflineDataAuthMethod() {
         int supportMode = NOT_SUPPORT;
 
-        AIP aip= new AIP(getEmvTransData().getTagMap().get(EMVTag.tag82));
-        TerminalCapabilities terminalCap = new TerminalCapabilities(getEmvTransData().getTagMap().get(TerminalTag.tag9F33));
+        AIP aip = getEmvTransData().getAIP();
+        TerminalCapabilities terminalCap = getEmvTransData().getTerminalCap();
 
         if (aip.isSupportCDA() && terminalCap.isSupportCDA()) {
             supportMode = CDA;
