@@ -59,7 +59,7 @@ public class ReadCardState extends AbstractEmvState {
 
                 for (int recordNum = startRecordNum; recordNum <= endRecordNum; recordNum++) {
                     retData = executeApduCmd(new ReadRecordCmd(sfi, (byte) recordNum));
-                    ReadRecordResponse readRecordResponse = new ReadRecordResponse(retData, true);
+                    ReadRecordResponse readRecordResponse = new ReadRecordResponse(retData, false);
                     if (readRecordResponse.isSuccess()) {
                         if (numOfOfflineDataRecords > 0 && recordNum < startRecordNum + numOfOfflineDataRecords) {
                             LogUtil.d(TAG, "save offline data authentication sfi=[" + sfi + "] recordNum=[" + recordNum + "]");

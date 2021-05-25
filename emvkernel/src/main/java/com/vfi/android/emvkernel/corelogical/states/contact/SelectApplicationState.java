@@ -245,7 +245,7 @@ public class SelectApplicationState extends AbstractEmvState {
 
         for(int recordNum = 1; recordNum < 256; recordNum++) {
             byte[] retData = executeApduCmd(new ReadRecordCmd(sfi, (byte) recordNum));
-            ReadRecordResponse response = new ReadRecordResponse(retData, false);
+            ReadRecordResponse response = new ReadRecordResponse(retData, true);
             if (response.isNoRecord()) {
                 break;
             }
