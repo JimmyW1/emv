@@ -49,4 +49,8 @@ public class EMVResultCode {
     public static final int ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_DATA_HEADER_NOT_6A = 1044;
     public static final int ERR_SIGNED_DYNAMIC_APPLICATION_DATA_FORMAT_NOT_05 = 1045;
     public static final int ERR_SIGNED_DYNAMIC_APPLICATION_DATA_RECOVERED_DATA_HASH_WRONG = 1046;
+    // CVM
+    public static final int ERR_PIN_BLOCKED = 1047;
+    public static final int ERR_PIN_TRY_LIMIT_EXCEEDED = 1048;
+
 }

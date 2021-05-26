@@ -20,6 +20,10 @@ public class SW12 {
     public static final String OPFAIL_MUTUAL_AUTH_NEEDED = "6803";
     public static final String OPFAIL_STATUS_NOT_SATISFIED = "6804";
 
+    public static final String OPFAIL_INVALID_KEY_ID = "6983";
+    public static final String OPFAIL_INVALID_DATA = "6984";
+    public static final String OPFAIL_NO_RETRY_REMAIN = "63C0";
+
     // self define
     public static final String ERR_NO_COMMUNICATION = "ERR_NO_COMMUNICATION";
 

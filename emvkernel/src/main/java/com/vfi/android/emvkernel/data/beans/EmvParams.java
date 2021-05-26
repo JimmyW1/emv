@@ -1,11 +1,15 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.libtools.consts.TAGS;
+import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EmvParams {
+    private String TAG = TAGS.EMV_COMM;
+
     private boolean isContact; // true - insert card; false - tap card.
     private int emvParameterGroup = 0; // default emv parameter group
     private boolean isSupportPSE; // default true;
@@ -32,6 +36,11 @@ public class EmvParams {
      * This is used for response tags in confirm card info {@link CardInfo}
      */
     private List<String> cardConfirmTagList;
+    /**
+     * if pin bypass will bypass all following cvm rules
+     * default true
+     */
+    private boolean bypassAll;
 
     /**
      * PBOC parameters
@@ -43,6 +52,7 @@ public class EmvParams {
         isSupportCardHolderSelect = true;
         ctlsKernelIndicatorList = new ArrayList<>();
         isSupportECash = false;
+        bypassAll = true; // EMV book 4 page 47
     }
 
     public boolean isContact() {
@@ -126,5 +136,14 @@ public class EmvParams {
 
     public void setTerminalCountryCode(String terminalCountryCode) {
         this.terminalCountryCode = terminalCountryCode;
+    }
+
+    public boolean isBypassAll() {
+        LogUtil.d(TAG, "isBypassAll=[" + bypassAll + "]");
+        return bypassAll;
+    }
+
+    public void setBypassAll(boolean bypassAll) {
+        this.bypassAll = bypassAll;
     }
 }

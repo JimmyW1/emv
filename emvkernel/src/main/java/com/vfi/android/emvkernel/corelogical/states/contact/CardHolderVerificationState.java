@@ -19,6 +19,7 @@ import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalType;
 import com.vfi.android.emvkernel.data.consts.CvmType;
+import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.data.consts.TransType;
@@ -70,6 +71,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
         if (!getEmvTransData().getTagMap().containsKey(EMVTag.tag8E)) {
             LogUtil.d(TAG, "NO CVM List present");
             getEmvTransData().getCvmResult().setCvmResult((byte)0x3F, (byte)0x00, CvmResult.UNKNOWN);
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_ICC_DATA_MISSING, true); // book 3 page 105
             jumpToState(EmvStateType.STATE_TERMINAL_RISK_MANAGEMENT);
             sendMessage(new Msg_StartTerminalRiskManagement());
             return;
@@ -80,6 +82,8 @@ public class CardHolderVerificationState extends AbstractEmvState {
             // Note: A CVM List with no Cardholder Verification Rules is considered to be the same as
             //a CVM List not being present
             LogUtil.d(TAG, "NO Card holder verification rules present");
+            getEmvTransData().getCvmResult().setCvmResult((byte)0x3F, (byte)0x00, CvmResult.UNKNOWN);
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_ICC_DATA_MISSING, true); // book 3 page 105
             jumpToState(EmvStateType.STATE_TERMINAL_RISK_MANAGEMENT);
             sendMessage(new Msg_StartTerminalRiskManagement());
             return;
@@ -126,7 +130,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC:
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE:
                 if (doEncipheredPinVerification(msg.getPin())) {
-                    if (cvmType == CvmType.PLAINTEXT_PIN_VERIFICATION_ICC_AND_SIGNATURE) {
+                    if (cvmType == CvmType.ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE) {
                         getEmvTransData().getCvmResult().setCvmResult(cvmRule.getCvmCode(), cvmRule.getCvmConditionCode(), CvmResult.UNKNOWN);
                     } else {
                         getEmvTransData().getCvmResult().setCvmResult(cvmRule.getCvmCode(), cvmRule.getCvmConditionCode(), CvmResult.SUCCESSFUL);
@@ -213,6 +217,20 @@ public class CardHolderVerificationState extends AbstractEmvState {
         getEmvTransData().getTagMap().put(TerminalTag.tag99, StringUtil.byte2HexStr(pinBlock));
         byte[] result = executeApduCmd(new VerifyCmd(false, pinBlock));
         VerifyResponse response = new VerifyResponse(result);
+        //• The PIN is blocked upon initial use of the VERIFY command or if recovery of
+        //the enciphered PIN Block has failed (the ICC returns SW1 SW2 = '6983' or
+        //'6984' in response to the VERIFY command). In this case, the terminal shall
+        //set the ‘PIN Try Limit exceeded’ bit in the TVR to 1.
+        //• The number of remaining PIN tries is reduced to zero (indicated by an
+        //SW1 SW2 of '63C0' in the response to the VERIFY command). In this case,
+        //the terminal shall set the ‘PIN Try Limit exceeded’ bit in the TVR to 1.
+        if (response.isPinBlocked()) {
+            pinTryCounter = 0;
+            setErrorCode(EMVResultCode.ERR_PIN_BLOCKED);
+        } else if (response.isZeroRetryRemain()) {
+            pinTryCounter = 0;
+            setErrorCode(EMVResultCode.ERR_PIN_TRY_LIMIT_EXCEEDED);
+        }
 
         return response.isSuccess();
     }
@@ -228,6 +246,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
         if (cvmList == null) {
             String iccCvmList = getEmvTransData().getTagMap().get(EMVTag.tag8E);
             cvmList = new CvmList(iccCvmList);
+            // no cvm rules is checked before, no need check it again.
         }
 
         for (int i = currentCvmRuleIndex; i < cvmList.getCvmRules().size(); i++) {
@@ -283,7 +302,8 @@ public class CardHolderVerificationState extends AbstractEmvState {
             currentCvmRuleIndex++;
             doCvmVerification();
         } else {
-
+            LogUtil.d(TAG, "current CVM rule not support try next rule.");
+            processCvmVerificationResult(false);
         }
     }
 
@@ -306,7 +326,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
             case CvmType.PLAINTEXT_PIN_VERIFICATION_ICC_AND_SIGNATURE:
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC:
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE:
-                if (isPinBypassedBefore) {
+                if (isPinBypassedBefore && getEmvContext().getEmvParams().isBypassAll()) {
                     LogUtil.d(TAG, "isPinBypassedBefore is true");
                     doPinBypassProcess(cvmRule);
                     return;
@@ -328,7 +348,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
                 }
                 break;
             case CvmType.ENCIPHERED_PIN_VERIFIED_ONLINE:
-                if (isPinBypassedBefore) {
+                if (isPinBypassedBefore && getEmvContext().getEmvParams().isBypassAll()) {
                     LogUtil.d(TAG, "isPinBypassedBefore is true");
                     doPinBypassProcess(cvmRule);
                     return;
@@ -473,38 +493,54 @@ public class CardHolderVerificationState extends AbstractEmvState {
                 //terminal (which might occur if the terminal application program is at a
                 //different version level than the ICC application),
                 // then the terminal shall bypass the rule and proceed to the next
+
+                // If the CVM is not recognised, the terminal shall set the ‘Unrecognised CVM’
+                //bit in the TVR (b7 of byte 3) to 1 and processing continues at step 2.
+                getEmvTransData().getTvr().markFlag(TVR.FLAG_UNRECOGNISED_CVM, true);
                 return false;
         }
 
         // application currency = That is, Transaction Currency Code = Application Currency Code.
 
         byte cvmType = (byte) (cvmRule.getCvmCode() & 0x3F);
+        boolean isPinRelatedCvm = false;
         switch (cvmType) {
             case CvmType.PLAINTEXT_PIN_VERIFICATION_ICC:
+                isPinRelatedCvm = true;
                 if (terminalCap.isSupportPlainTextPinVerifyByICC()) {
                     LogUtil.d(TAG, "Match currentCvmRuleIndex=[" + currentCvmRuleIndex + "] PLAINTEXT_PIN_VERIFICATION_ICC");
                     return true;
                 }
                 break;
             case CvmType.ENCIPHERED_PIN_VERIFIED_ONLINE:
+                isPinRelatedCvm = true;
                 if (terminalCap.isSupportEncipheredPINForOnlineVerification()) {
                     LogUtil.d(TAG, "Match currentCvmRuleIndex=[" + currentCvmRuleIndex + "] ENCIPHERED_PIN_VERIFIED_ONLINE");
                     return true;
                 }
                 break;
             case CvmType.PLAINTEXT_PIN_VERIFICATION_ICC_AND_SIGNATURE:
+                isPinRelatedCvm = true;
+                //Some CVMs require multiple verification methods (for example, offline PIN plus
+                //signature). For these CVMs, all methods in the CVM must be successful for
+                //cardholder verification to be considered successful.
                 if (terminalCap.isSupportPlainTextPinVerifyByICC() && terminalCap.isSupportSignaturePaper()) {
                     LogUtil.d(TAG, "Match currentCvmRuleIndex=[" + currentCvmRuleIndex + "] PLAINTEXT_PIN_VERIFICATION_ICC_AND_SIGNATURE");
                     return true;
                 }
                 break;
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC:
+                isPinRelatedCvm = true;
                 if (terminalCap.isSupportEncipheredPINForOfflineVerification()) {
                     LogUtil.d(TAG, "Match currentCvmRuleIndex=[" + currentCvmRuleIndex + "] ENCIPHERED_PIN_VERIFICATION_ICC");
                     return true;
                 }
                 break;
             case CvmType.ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE:
+                isPinRelatedCvm = true;
+                //Some CVMs require multiple verification methods (for example, offline PIN plus
+                //signature). For these CVMs, all methods in the CVM must be successful for
+                //cardholder verification to be considered successful.
                 if (terminalCap.isSupportEncipheredPINForOfflineVerification() && terminalCap.isSupportSignaturePaper()) {
                     LogUtil.d(TAG, "Match currentCvmRuleIndex=[" + currentCvmRuleIndex + "] ENCIPHERED_PIN_VERIFICATION_ICC_AND_SIGNATURE");
                     return true;
@@ -523,6 +559,12 @@ public class CardHolderVerificationState extends AbstractEmvState {
                 }
                 break;
         }
+
+        if (isPinRelatedCvm) {
+            LogUtil.d(TAG, "terminal not support pin related cvm method");
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_PIN_REQ_PINPAD_NOT_PRESENT_OR_NOT_WORKING, true);
+        }
+
         return false;
     }
 }

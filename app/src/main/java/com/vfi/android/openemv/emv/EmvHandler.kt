@@ -91,6 +91,17 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onRequestOnlinePIN() {
-        TODO("Not yet implemented")
+        var handler = Handler(Looper.getMainLooper());
+        handler.post {
+            var CONFIRM = 1;
+            var CANCEL = 0;
+            DialogUtil.showInputDialog(context, "Please Input Online Pin:", DialogUtil.InputDialogListener() { inputStr: String, isConfirm: Boolean ->
+                if (isConfirm) {
+                    emvManager.importPin(CONFIRM, inputStr.toByteArray())
+                } else {
+                    emvManager.importPin(CANCEL, null)
+                }
+            });
+        };
     }
 }
