@@ -68,6 +68,10 @@ public class SecurityUtil {
         return result;
     }
 
+    public static byte[] rsaRecovery(byte[] publicKey, byte[] data) {
+        return null;
+    }
+
     public static String calculateSha1(String dataHex) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");

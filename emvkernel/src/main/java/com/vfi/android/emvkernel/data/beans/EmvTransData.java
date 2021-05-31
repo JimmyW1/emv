@@ -21,6 +21,9 @@ public class EmvTransData {
     private List<Map<String, String>> caPublicKeyList;
     private Map<String, String> selectCardEmvKeyParamsMap;
     private String staticDataToBeAuthenticated;
+    private String issuerPublicKey;
+    private String iccPublicKey;
+    private String iccPinPublicKey;
     private boolean isExistStaticDataRecordNotCodeWithTag70;
     private int errorCode;
     private Map<String, String> tagMap;
@@ -52,6 +55,14 @@ public class EmvTransData {
                 updateCvmResult();
             }
         });
+        issuerPublicKey = null;
+        iccPublicKey = null;
+        iccPinPublicKey = null;
+        staticDataToBeAuthenticated = null;
+        isExistStaticDataRecordNotCodeWithTag70 = false;
+        errorCode = 0;
+        aip = null;
+        terminalCap = null;
     }
 
     public void resetEmvTransData() {
@@ -65,9 +76,24 @@ public class EmvTransData {
         if (caPublicKeyList != null) {
             caPublicKeyList.clear();
         }
+
+        if (selectCardEmvKeyParamsMap != null) {
+            selectCardEmvKeyParamsMap.clear();
+        }
+
+        clearTVR_TSI_CvmResult();
+
+        issuerPublicKey = null;
+        iccPublicKey = null;
+        iccPinPublicKey = null;
+        staticDataToBeAuthenticated = null;
+        isExistStaticDataRecordNotCodeWithTag70 = false;
+        errorCode = 0;
+        aip = null;
+        terminalCap = null;
     }
 
-    public void clearTVRAndTSI() {
+    public void clearTVR_TSI_CvmResult() {
         tvr.clear();
         tsi.clear();
         cvmResult.clear();
@@ -197,5 +223,29 @@ public class EmvTransData {
             terminalCap = new TerminalCapabilities(tagMap.get(TerminalTag.tag9F33));
         }
         return terminalCap;
+    }
+
+    public String getIssuerPublicKey() {
+        return issuerPublicKey;
+    }
+
+    public void setIssuerPublicKey(String issuerPublicKey) {
+        this.issuerPublicKey = issuerPublicKey;
+    }
+
+    public String getIccPublicKey() {
+        return iccPublicKey;
+    }
+
+    public void setIccPublicKey(String iccPublicKey) {
+        this.iccPublicKey = iccPublicKey;
+    }
+
+    public String getIccPinPublicKey() {
+        return iccPinPublicKey;
+    }
+
+    public void setIccPinPublicKey(String iccPinPublicKey) {
+        this.iccPinPublicKey = iccPinPublicKey;
     }
 }

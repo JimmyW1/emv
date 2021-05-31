@@ -40,7 +40,7 @@ public class ReadCardState extends AbstractEmvState {
 
     private void processStartGetProcessingOptionsMessage(Message message) {
         // follow book 3 page 90
-        getEmvTransData().clearTVRAndTSI();
+        getEmvTransData().clearTVR_TSI_CvmResult();
         String pdolTags = getPDOLData();
         byte[] retData = executeApduCmd(new GetProcessingOptionsCmd(pdolTags));
         GetProcessingOptionsResponse response = new GetProcessingOptionsResponse(retData);

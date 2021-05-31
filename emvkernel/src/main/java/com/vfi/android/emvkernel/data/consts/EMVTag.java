@@ -254,4 +254,19 @@ public class EMVTag {
      * Log Format (tag '9F4F')
      */
     public final static String tag9F4F = "9F4F";
+
+    /**
+     * NI ICC PIN Encipherment Public Key Certificate b
+     */
+    public final static String tag9F2D = "9F2D";
+
+    /**
+     * 1 or 3 ICC PIN Encipherment Public Key Exponent b
+     */
+    public final static String tag9F2E = "9F2E";
+
+    /**
+     * NPE – NI + 42 ICC PIN Encipherment Public Key Remainder, if present
+     */
+    public final static String tag9F2F = "9F2F";
 }

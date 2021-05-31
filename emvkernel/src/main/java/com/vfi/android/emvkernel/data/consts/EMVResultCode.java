@@ -52,5 +52,11 @@ public class EMVResultCode {
     // CVM
     public static final int ERR_PIN_BLOCKED = 1047;
     public static final int ERR_PIN_TRY_LIMIT_EXCEEDED = 1048;
+    public static final int ERR_ISSUER_PUB_KEY_LEN_DIFFERENT_FROM_ICC_PIN_PUBLIC_KEY_CERT = 1049;
+    public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_FAILED = 1050;
+    public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_TRAILER_NOT_BC = 1051;
+    public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_HEADER_NOT_6A = 1052;
+    public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_CERTIFICATE_FORMAT_NOT_04 = 1053;
+    public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_CERTIFICATE_HASH_WRONG = 1054;
 
 }

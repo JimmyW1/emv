@@ -691,6 +691,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
             iccPublicKey += getEmvTransData().getTagMap().get(EMVTag.tag9F48);
         }
         LogUtil.d(TAG, "iccPublicKey=[" + iccPublicKey + "]");
+        getEmvTransData().setIccPublicKey(iccPublicKey);
 
         LogUtil.d(TAG, "retrievalICCPublicKey success");
         return true;
@@ -853,6 +854,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
             issuerPublicKey += getEmvTransData().getTagMap().get(EMVTag.tag92);
         }
         LogUtil.d(TAG, "issuerPublicKey=[" + issuerPublicKey + "]");
+        getEmvTransData().setIssuerPublicKey(issuerPublicKey);
 
         return true;
     }
