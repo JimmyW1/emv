@@ -23,7 +23,7 @@ import javax.crypto.Cipher;
 public class SecurityUtil {
     private static final String TAG = TAGS.SECURITY;
 
-    public static byte[] signVerify(byte[] dataBytes, byte[] expBytes, byte[] modBytes) {
+    public static byte[] signRecover(byte[] dataBytes, byte[] expBytes, byte[] modBytes) {
 
         int inBytesLength = dataBytes.length;
 
@@ -66,10 +66,6 @@ public class SecurityUtil {
 
         LogUtil.d(TAGS.SECURITY, "recoveryDatHex=" + StringUtil.byte2HexStr(result));
         return result;
-    }
-
-    public static byte[] rsaRecovery(byte[] publicKey, byte[] data) {
-        return null;
     }
 
     public static String calculateSha1(String dataHex) {

@@ -16,12 +16,10 @@ import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
-import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.utils.DOLUtil;
 import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
-import com.vfi.android.libtools.utils.TLVUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -212,7 +210,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         byte[] signedStaticApplicationDataBytes = StringUtil.hexStr2Bytes(signedStaticApplicationData);
         byte[] issuerPublicKeyModules = StringUtil.hexStr2Bytes(issuerPublicKey);
         byte[] issuerPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F32));
-        byte[] recoveredSignedStaticAppDataBytes = SecurityUtil.signVerify(signedStaticApplicationDataBytes, issuerPublicKeyExponent, issuerPublicKeyModules);
+        byte[] recoveredSignedStaticAppDataBytes = SecurityUtil.signRecover(signedStaticApplicationDataBytes, issuerPublicKeyExponent, issuerPublicKeyModules);
         String recoveredSignedStaticAppDataHex = StringUtil.byte2HexStr(recoveredSignedStaticAppDataBytes);
         LogUtil.d(TAG, "recoveredSignedStaticAppDataHex=[" + recoveredSignedStaticAppDataHex + "]");
 
@@ -377,7 +375,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         //failed.
         byte[] iccPublicKeyModulesBytes = StringUtil.hexStr2Bytes(iccPublicKey);
         byte[] iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F47));
-        byte[] iccSignDataRecoveredBytes = SecurityUtil.signVerify(StringUtil.hexStr2Bytes(response.getTag9F4B()), iccPublicKeyExponent, iccPublicKeyModulesBytes);
+        byte[] iccSignDataRecoveredBytes = SecurityUtil.signRecover(StringUtil.hexStr2Bytes(response.getTag9F4B()), iccPublicKeyExponent, iccPublicKeyModulesBytes);
         String iccSignDataRecoveredHex = StringUtil.byte2HexStr(iccSignDataRecoveredBytes);
         LogUtil.d(TAG, "iccSignDataRecoveredHex=[" + iccSignDataRecoveredHex + "]");
 
@@ -534,7 +532,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
 
         byte[] iccPublicKeyCertBytes = StringUtil.hexStr2Bytes(iccPublicKeyCert);
         byte[] issuerPublicKeyExponentBytes = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F32));
-        byte[] iccPublicKeyCertRecoveredBytes = SecurityUtil.signVerify(iccPublicKeyCertBytes, issuerPublicKeyExponentBytes, StringUtil.hexStr2Bytes(issuerPublicKey));
+        byte[] iccPublicKeyCertRecoveredBytes = SecurityUtil.signRecover(iccPublicKeyCertBytes, issuerPublicKeyExponentBytes, StringUtil.hexStr2Bytes(issuerPublicKey));
         String iccPublicKeyCertRecoveredHex = StringUtil.byte2HexStr(iccPublicKeyCertRecoveredBytes);
         LogUtil.d(TAG, "iccPublicKeyCertRecoveredHex=[" + iccPublicKeyCertRecoveredHex + "]");
 
@@ -723,7 +721,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         byte[] authorPublicKey = StringUtil.hexStr2Bytes(getEmvTransData().getSelectCardEmvKeyParamsMap().get(ParamTag.KEY));
         byte[] exponent = StringUtil.hexStr2Bytes(getEmvTransData().getSelectCardEmvKeyParamsMap().get(ParamTag.EXPONENT));
         byte[] certifiedIssuerPublicKey = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag90));
-        byte[] recoverDataBytes = SecurityUtil.signVerify(certifiedIssuerPublicKey, exponent, authorPublicKey);
+        byte[] recoverDataBytes = SecurityUtil.signRecover(certifiedIssuerPublicKey, exponent, authorPublicKey);
         String recoverDataBytesHex = StringUtil.byte2HexStr(recoverDataBytes);
         LogUtil.d(TAG, "recoverDataBytesHex=[" + recoverDataBytesHex  + "]");
 

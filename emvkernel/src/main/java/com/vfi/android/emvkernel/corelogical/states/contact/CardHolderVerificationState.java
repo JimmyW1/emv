@@ -283,7 +283,14 @@ public class CardHolderVerificationState extends AbstractEmvState {
         String pinDataHex = "7F" + StringUtil.byte2HexStr(getPinBlock(pin)) + StringUtil.byte2HexStr(response.getUnpredictableNumber()) + SecurityUtil.getRandomBytesAndBreakDown(iccPinPublicKeyLen - 17);
         LogUtil.d(TAG, "pinDataHex=[" + pinDataHex + "]");
 
-        byte[] encipheredPINData = SecurityUtil.rsaRecovery(StringUtil.hexStr2Bytes(getEmvTransData().getIccPinPublicKey()), StringUtil.hexStr2Bytes(pinDataHex));
+        byte[] iccPublicKeyModules = StringUtil.hexStr2Bytes(getEmvTransData().getIccPinPublicKey());
+        byte[] iccPublicKeyExponent = null;
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F2E)) {
+            iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F2E)); // icc pin public key exponent
+        } else {
+            iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F47)); // icc public key exponent
+        }
+        byte[] encipheredPINData = SecurityUtil.signRecover(StringUtil.hexStr2Bytes(pinDataHex), iccPublicKeyExponent, iccPublicKeyModules);
         LogUtil.d(TAG, "encipheredPINDataHex=[" + StringUtil.byte2HexStr(encipheredPINData) + "]");
 
         result = executeApduCmd(new VerifyCmd(true, encipheredPINData));
@@ -319,6 +326,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
                 //encipherment. The ICC Public Key is stored on the ICC in a public key
                 //certificate as specified in section 6.1.
                 LogUtil.d(TAG, "ICC PIN public key not found, use ICC public key as pin public key.");
+                getEmvTransData().setIccPinPublicKey(getEmvTransData().getIccPublicKey());
                 return true;
             } else {
                 LogUtil.d(TAG, "Both ICC PIN public key and ICC public key not found.");
@@ -347,7 +355,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
 
         byte[] iccPinPublicKeyCertBytes = StringUtil.hexStr2Bytes(iccPinPublicKeyCert);
         byte[] issuerPublicKeyExponentBytes = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F32));
-        byte[] iccPinPublicKeyCertRecoveredBytes = SecurityUtil.signVerify(iccPinPublicKeyCertBytes, issuerPublicKeyExponentBytes, StringUtil.hexStr2Bytes(issuerPublicKey));
+        byte[] iccPinPublicKeyCertRecoveredBytes = SecurityUtil.signRecover(iccPinPublicKeyCertBytes, issuerPublicKeyExponentBytes, StringUtil.hexStr2Bytes(issuerPublicKey));
         String iccPinPublicKeyCertRecoveredHex = StringUtil.byte2HexStr(iccPinPublicKeyCertRecoveredBytes);
         LogUtil.d(TAG, "iccPinPublicKeyCertRecoveredHex=[" + iccPinPublicKeyCertRecoveredHex + "]");
 
@@ -385,43 +393,14 @@ public class CardHolderVerificationState extends AbstractEmvState {
             return false;
         }
 
-        //5. Concatenate from left to right the second to the tenth data elements in
-        //Table 14 (that is, Certificate Format through ICC Public Key or Leftmost
-        //Digits of the ICC Public Key), followed by the ICC Public Key Remainder
-        //(if present), the ICC Public Key Exponent, and finally the static data to be
-        //authenticated specified in section 10.3 of Book 3. If the Static Data
-        //Authentication Tag List is present and contains tags other than '82', then
-        //offline dynamic data authentication has failed.
-        //6. Apply the indicated hash algorithm (derived from the Hash Algorithm
-        //Indicator) to the result of the concatenation of the previous step to
-        //produce the hash result.
-        //7. Compare the calculated hash result from the previous step with the
-        //recovered Hash Result. If they are not the same, offline dynamic data
-        //authentication has failed.
+
         String hexData = iccPinPublicKeyCertRecoveredHex.substring(2, iccPinPublicKeyCertRecoveredHex.length() - 2 - 40);
         if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F2F)) {
             hexData += getEmvTransData().getTagMap().get(EMVTag.tag9F2F);
         }
         hexData += getEmvTransData().getTagMap().get(EMVTag.tag9F2E);
 
-        if (getEmvTransData().isExistStaticDataRecordNotCodeWithTag70()) {
-            LogUtil.d(TAG, "ICC PIN Public key, Read offline static data record not code with tag70");
-            setErrorCode(EMVResultCode.ERR_READ_OFFLINE_STATIC_DATA_RECORD_NOT_CODED_WITH_TAG70);
-            return false;
-        }
 
-        hexData += getEmvTransData().getStaticDataToBeAuthenticated();
-
-        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag9F4A)) {
-            String tag9F4AValue = getEmvTransData().getTagMap().get(EMVTag.tag9F4A);
-            LogUtil.d(TAG, "Optional Static Data Authentication Tag List=[" + tag9F4AValue + "]");
-            if (tag9F4AValue.length() > 0 && !tag9F4AValue.equals(EMVTag.tag82)) {
-                LogUtil.d(TAG, "Optional Static Data Authentication Tag List not only tag82");
-                setErrorCode(EMVResultCode.ERR_OPTIONAL_STATIC_DATA_AUTHENTICATION_TAG_LIST_NOT_ONLY_TAG82);
-                return false;
-            }
-            hexData += getEmvTransData().getTagMap().get(EMVTag.tag82);
-        }
         LogUtil.d(TAG, "hexData=[" + hexData + "]");
 
         int hashIndicatorStartIndex = (1+1+10+2+3) * 2;
