@@ -269,4 +269,18 @@ public class EMVTag {
      * NPE – NI + 42 ICC PIN Encipherment Public Key Remainder, if present
      */
     public final static String tag9F2F = "9F2F";
+
+    /**
+     * Lower Consecutive Offline Limit
+     * Issuer-specified preference for the maximum number of consecutive offline transactions for this ICC application allowed in a terminal with online capability
+     * ICC b '70' or '77' '9F14' 1
+     */
+    public final static String tag9F14 = "9F14";
+
+    /**
+     * Upper Consecutive Offline Limit
+     * Issuer-specified preference for the maximum number of consecutive offline transactions for this ICC application allowed in a terminal without online capability
+     * ICC b '70' or '77' '9F23' 1
+     */
+    public final static String tag9F23 = "9F23";
 }

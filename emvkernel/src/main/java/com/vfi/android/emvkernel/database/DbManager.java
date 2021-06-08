@@ -1,5 +1,9 @@
 package com.vfi.android.emvkernel.database;
 
+import com.vfi.android.emvkernel.data.beans.TransRecord;
+import com.vfi.android.emvkernel.data.consts.ParamTag;
+import com.vfi.android.emvkernel.data.consts.TerminalTag;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,14 +65,20 @@ public class DbManager implements IDbOperation {
         String terminalCap1 = "9F3303E0F8A0"; // support SDA CDA
         String terminalCap2 = "9F3303E0F840"; // support DDA
         String terminalParameters = terminalCap2;
-        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters + "9F09020200" + "9F350122");
-        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters + "9F09020200" + "9F350122");
-        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters + "9F09020002" + "9F350122");
-        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters + "9F09020030" + "9F350122");
-        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters + "9F09020030" + "9F350122");
-        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters + "9F09020200" + "9F350122");
-        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters + "9F09020001" + "9F350122");
-        appParamList.add("9F0605A000000065" + "DF010100" + terminalParameters + "9F09020001" + "9F350122");
+        String terminalType = ParamTag.APP_TERMINAL_TYPE + "01" + "22";
+        String versionNum = ParamTag.VER_NUM + "02" + "0200";
+        String floorLimit = ParamTag.FLOOR_LIMIT + "06" + "000000000000";
+        String targetPercentage = ParamTag.TARGET_PERCENTAGE + "01" + "00";
+        String maximumTargetPercentage = ParamTag.MAX_TARGET_PERCENTAGE + "01" + "00";
+        String threshold = ParamTag.THRESHOLD + "06" + "000000000000";
+        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters + "9F09020001" + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        appParamList.add("9F0605A000000065" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
 
         return appParamList;
     }
@@ -138,5 +148,15 @@ public class DbManager implements IDbOperation {
 
 
         return appCapksList;
+    }
+
+    @Override
+    public TransRecord getLatestTransRecord(String pan, String panSeqNum, String currentTime, long timeScopeSeconds) {
+        return null;
+    }
+
+    @Override
+    public void saveTransRecords(TransRecord transRecord) {
+
     }
 }

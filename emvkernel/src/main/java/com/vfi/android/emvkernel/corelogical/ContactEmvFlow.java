@@ -16,6 +16,7 @@ import com.vfi.android.emvkernel.corelogical.states.contact.OfflineDataAuthentic
 import com.vfi.android.emvkernel.corelogical.states.contact.ProcessingRestrictionsState;
 import com.vfi.android.emvkernel.corelogical.states.contact.ReadCardState;
 import com.vfi.android.emvkernel.corelogical.states.contact.SelectApplicationState;
+import com.vfi.android.emvkernel.corelogical.states.contact.TerminalActionAnalysisState;
 import com.vfi.android.emvkernel.corelogical.states.contact.TerminalRiskManagementState;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
@@ -66,6 +67,9 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
                 break;
             case STATE_TERMINAL_RISK_MANAGEMENT:
                 emvState = new TerminalRiskManagementState();
+                break;
+            case STATE_TERMINAL_ACTION_ANALYSIS:
+                emvState = new TerminalActionAnalysisState();
                 break;
         }
 
