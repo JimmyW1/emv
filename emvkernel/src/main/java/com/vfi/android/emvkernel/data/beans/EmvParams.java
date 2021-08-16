@@ -1,5 +1,6 @@
 package com.vfi.android.emvkernel.data.beans;
 
+import com.vfi.android.emvkernel.data.consts.CDAMode;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
@@ -16,6 +17,7 @@ public class EmvParams {
     private boolean isSupportCardHolderSelect; // default true
     private List<CTLSKernelIndicator> ctlsKernelIndicatorList;
     private String amount; // Authorised amount 9F02
+    private String otherAmount; // Amount Other(Numeric) 9F03
     private String transCurrencyCode; // Transaction Currency Code 5F2A
     /**
      * Processing code  {@link com.vfi.android.emvkernel.data.consts.TransType}
@@ -32,6 +34,7 @@ public class EmvParams {
      */
     private String transProcessCode; // ISO 8583:1987 Processing Code
     private String terminalCountryCode; // Terminal country code
+    private String terminalType; // Terminal Type 9F35
     /**
      * This is used for response tags in confirm card info {@link CardInfo}
      */
@@ -47,12 +50,15 @@ public class EmvParams {
      */
     private boolean isSupportECash; // enable/disable electronic cash   9F7A
 
+    private int cdaMode;
+
     public EmvParams() {
         isSupportPSE = true;
         isSupportCardHolderSelect = true;
         ctlsKernelIndicatorList = new ArrayList<>();
         isSupportECash = false;
         bypassAll = true; // EMV book 4 page 47
+        cdaMode = CDAMode.MODE2; // default do CDA on first GAC
     }
 
     public boolean isContact() {
@@ -145,5 +151,29 @@ public class EmvParams {
 
     public void setBypassAll(boolean bypassAll) {
         this.bypassAll = bypassAll;
+    }
+
+    public int getCdaMode() {
+        return cdaMode;
+    }
+
+    public void setCdaMode(int cdaMode) {
+        this.cdaMode = cdaMode;
+    }
+
+    public String getOtherAmount() {
+        return otherAmount;
+    }
+
+    public void setOtherAmount(String otherAmount) {
+        this.otherAmount = otherAmount;
+    }
+
+    public String getTerminalType() {
+        return terminalType;
+    }
+
+    public void setTerminalType(String terminalType) {
+        this.terminalType = terminalType;
     }
 }

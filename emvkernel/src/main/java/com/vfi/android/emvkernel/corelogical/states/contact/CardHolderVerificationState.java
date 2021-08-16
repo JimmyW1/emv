@@ -642,7 +642,7 @@ public class CardHolderVerificationState extends AbstractEmvState {
     }
 
     private boolean isAttendedTerminalType() {
-        TerminalType terminalType = new TerminalType(getEmvTransData().getTagMap().get(TerminalTag.tag9F35));
+        TerminalType terminalType = getEmvTransData().getTerminalType();
         return terminalType.isAttendedTerminalType();
     }
 

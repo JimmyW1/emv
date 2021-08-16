@@ -5,6 +5,7 @@ import com.vfi.android.emvkernel.data.beans.tagbeans.CvmResult;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
+import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalType;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.interfaces.Callback;
@@ -31,8 +32,11 @@ public class EmvTransData {
     private TSI tsi;
     private AIP aip;
     private TerminalCapabilities terminalCap;
+    private TerminalType terminalType;
 
     private CvmResult cvmResult;
+    private boolean doCDAInFirstGAC;
+    private boolean doCDAInSecondGAC;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
@@ -63,6 +67,9 @@ public class EmvTransData {
         errorCode = 0;
         aip = null;
         terminalCap = null;
+        doCDAInFirstGAC = false;
+        doCDAInSecondGAC = false;
+        terminalType = null;
     }
 
     public void resetEmvTransData() {
@@ -91,6 +98,9 @@ public class EmvTransData {
         errorCode = 0;
         aip = null;
         terminalCap = null;
+        doCDAInFirstGAC = false;
+        doCDAInSecondGAC = false;
+        terminalType = null;
     }
 
     public void clearTVR_TSI_CvmResult() {
@@ -247,5 +257,35 @@ public class EmvTransData {
 
     public void setIccPinPublicKey(String iccPinPublicKey) {
         this.iccPinPublicKey = iccPinPublicKey;
+    }
+
+    public boolean isDoCDAInFirstGAC() {
+        return doCDAInFirstGAC;
+    }
+
+    public void setDoCDAInFirstGAC(boolean doCDAInFirstGAC) {
+        this.doCDAInFirstGAC = doCDAInFirstGAC;
+    }
+
+    public boolean isDoCDAInSecondGAC() {
+        return doCDAInSecondGAC;
+    }
+
+    public void setDoCDAInSecondGAC(boolean doCDAInSecondGAC) {
+        this.doCDAInSecondGAC = doCDAInSecondGAC;
+    }
+
+    public TerminalType getTerminalType() {
+        if (terminalType == null) {
+            String tag9F35;
+            if (tagMap.containsKey(TerminalTag.tag9F35)) {
+                tag9F35 = tagMap.get(TerminalTag.tag9F35);
+            } else {
+                tag9F35 = "22";
+            }
+            terminalType = new TerminalType(tag9F35);
+        }
+
+        return terminalType;
     }
 }

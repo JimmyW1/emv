@@ -71,14 +71,15 @@ public class DbManager implements IDbOperation {
         String targetPercentage = ParamTag.TARGET_PERCENTAGE + "01" + "00";
         String maximumTargetPercentage = ParamTag.MAX_TARGET_PERCENTAGE + "01" + "00";
         String threshold = ParamTag.THRESHOLD + "06" + "000000000000";
-        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters + "9F09020001" + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
-        appParamList.add("9F0605A000000065" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage);
+        String terminalCountryCode = ParamTag.COUNTRY_CODE_TERM + "02" + "0156";
+        appParamList.add("9F0608A000000003101001" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000003" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000004" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000333" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0608A000000333010102" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000677" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000025" + "DF010100" + terminalParameters + "9F09020001" + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
+        appParamList.add("9F0605A000000065" + "DF010100" + terminalParameters + versionNum + terminalType + floorLimit + threshold + targetPercentage + maximumTargetPercentage + terminalCountryCode);
 
         return appParamList;
     }

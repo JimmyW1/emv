@@ -283,4 +283,57 @@ public class EMVTag {
      * ICC b '70' or '77' '9F23' 1
      */
     public final static String tag9F23 = "9F23";
+
+    /**
+     * Issuer Action Code - Default
+     * Specifies the issuer’s conditions that cause a transaction to be rejected if it might have been approved online, but the terminal is unable to process the transaction online
+     * ICC b '70' or '77' '9F0D' 5
+     */
+    public final static String tag9F0D = "9F0D";
+
+    /**
+     * Issuer Action Code - Denial
+     * Specifies the issuer’s conditions that cause the denial of a transaction without attempt to go online
+     * ICC b '70' or '77' '9F0E' 5
+     */
+    public final static String tag9F0E = "9F0E";
+
+    /**
+     * Issuer Action Code - Online
+     * Specifies the issuer’s conditions that cause a transaction to be transmitted online
+     * ICC b '70' or '77' '9F0F' 5
+     */
+    public final static String tag9F0F = "9F0F";
+
+    /**
+     * Transaction Certificate Data Object List (TDOL)
+     * List of data objects (tag and length) to be used by the terminal in generating the TC Hash Value
+     * ICC b '70' or '77' '97' var. up to 252
+     */
+    public final static String tag97 = "97";
+
+    /**
+     * Cryptogram Information Data
+     * Indicates the type of cryptogram and the actions to be performed by the terminal
+     * ICC b '77' or '80' '9F27' 1
+     */
+    public final static String tag9F27 = "9F27";
+
+
+    /**
+     * Issuer Application Data
+     * Contains proprietary application data for transmission to the issuer in an online transaction.
+     * Note: For CCD-compliant applications, Annex C, section C7 defines the specific coding of the Issuer Application Data (IAD). To avoid potential conflicts
+     * with CCD-compliant applications, it is strongly recommended that the IAD data element in an application that is not CCD-compliant should not
+     * use the coding for a CCD-compliant application
+     * ICC b '77' or '80' '9F10' var. up to 32
+     */
+    public final static String tag9F10 = "9F10";
+
+    /**
+     * TAG 9F7C
+     * Visa Customer Exclusive Data
+     * an VAR ..64
+     */
+    public final static String tag9F7C = "9F7C";
 }

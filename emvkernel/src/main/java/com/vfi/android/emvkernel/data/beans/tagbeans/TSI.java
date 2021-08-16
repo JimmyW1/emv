@@ -41,6 +41,26 @@ public class TSI {
                 bytePosition = 0;
                 bitPosition = (byte) 0x80;
                 break;
+            case FLAG_CARDHOLDER_VERIFICATION_WAS_PERFORMED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_CARD_RISK_MANAGEMENT_WAS_PERFORMED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_ISSUER_AUTHENTICATION_WAS_PERFORMED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x10;
+                break;
+            case FLAG_TERMINAL_RISK_MANAGEMENT_WAS_PERFORMED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x08;
+                break;
+            case FLAG_SCRIPT_PROCESSING_WAS_PERFORMED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x04;
+                break;
             default:
                 return;
         }

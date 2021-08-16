@@ -13,7 +13,9 @@ import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +83,13 @@ public abstract class AbstractEmvState implements IEmvState {
             tagMap.put(TerminalTag.tag9F02, "000000000000");
         }
 
+        String otherAmount = emvParams.getOtherAmount();
+        if (otherAmount != null && otherAmount.length() > 0) {
+            tagMap.put(TerminalTag.tag9F03, StringUtil.getNonNullStringLeftPadding(otherAmount, 12));
+        } else {
+            tagMap.put(TerminalTag.tag9F03, "000000000000");
+        }
+
         String transactionType = emvParams.getTransProcessCode();
         transactionType = StringUtil.getNonNullStringRightPadding(transactionType, 2);
         tagMap.put(TerminalTag.tag9C, transactionType);
@@ -89,6 +98,16 @@ public abstract class AbstractEmvState implements IEmvState {
         if (terminalCountryCode != null && terminalCountryCode.length() > 0) {
             terminalCountryCode = StringUtil.getNonNullStringLeftPadding(terminalCountryCode, 4);
             tagMap.put(TerminalTag.tag9F1A, terminalCountryCode);
+        }
+
+        String transCurrencyCode = emvParams.getTransCurrencyCode();
+        if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
+            tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
+        }
+
+        String terminalType = emvParams.getTerminalType();
+        if (terminalType != null && terminalType.length() > 0) {
+            tagMap.put(TerminalTag.tag9F35, StringUtil.getNonNullStringLeftPadding(terminalType, 2));
         }
 
         // put selected terminal TAGS to current tag Map
@@ -100,16 +119,29 @@ public abstract class AbstractEmvState implements IEmvState {
             }
         }
 
-        // if emv param set trans currency code, will use this value, if not set will use Application Parameter value
-        String transCurrencyCode = emvParams.getTransCurrencyCode();
-        // TODO after select application use emv parameter transaction currency code replace this one.
-        if (transCurrencyCode != null && transCurrencyCode.length() > 0) {
-            tagMap.put(TerminalTag.tag5F2A, StringUtil.getNonNullStringLeftPadding(transCurrencyCode, 4));
-        }
-
         String unpredictableNumber = SecurityUtil.getRandomBytesAndBreakDown(4);
         LogUtil.d(TAG, "TAG9F37(Unpredictable Number)=[" + unpredictableNumber + "]");
         tagMap.put(TerminalTag.tag9F37, unpredictableNumber);
+
+        String transactionDate = getDateYYMMDD(); // Transaction Date n 6 YYMMDD
+        LogUtil.d(TAG, "transactionDate=[" + transactionDate + "]");
+        tagMap.put(TerminalTag.tag9A, transactionDate);
+
+        String transactionTime = getTimeHHMMSS(); // Transaction Time n 6 HHMMSS
+        LogUtil.d(TAG, "transactionTime=[" + transactionTime + "]");
+        tagMap.put(TerminalTag.tag9F21, transactionTime);
+    }
+
+    private String getDateYYMMDD() {
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyMMdd");// yyyyMMdd
+        return simpleDateFormat.format(date);
+    }
+
+    private String getTimeHHMMSS() {
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HHmmss");
+        return simpleDateFormat.format(date);
     }
 
     public IEmvHandler getEmvHandler() {
@@ -159,5 +191,10 @@ public abstract class AbstractEmvState implements IEmvState {
         LogUtil.d(TAG, "stopEmv errorCode=[" + getEmvTransData().getErrorCode() + "]");
         jumpToState(EmvStateType.STATE_STOP);
         sendMessage(new Msg_StopEmv());
+    }
+
+    protected void finishEmv() {
+        LogUtil.d(TAG, "finishEmv");
+        jumpToState(EmvStateType.STATE_IDLE);
     }
 }

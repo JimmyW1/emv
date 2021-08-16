@@ -13,6 +13,7 @@ import com.vfi.android.emvkernel.data.beans.tagbeans.AIP;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TerminalCapabilities;
+import com.vfi.android.emvkernel.data.consts.CDAMode;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
@@ -306,7 +307,26 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doCDAProcess() {
+        int cdaMode = getEmvContext().getEmvParams().getCdaMode();
+        LogUtil.d(TAG, "CDAMode=[" + cdaMode + "]");
+        switch (cdaMode) {
+            case CDAMode.MODE1:
+                getEmvTransData().setDoCDAInFirstGAC(true);
+                break;
+            case CDAMode.MODE2:
+                getEmvTransData().setDoCDAInFirstGAC(true);
+                getEmvTransData().setDoCDAInSecondGAC(true);
+                break;
+            case CDAMode.MODE3:
+                finishOfflineDataAuthentication(CDA, false);
+                return;
+            case CDAMode.MODE4:
+                getEmvTransData().setDoCDAInSecondGAC(true);
+                break;
+        }
 
+        LogUtil.d(TAG, "Perform CDA success");
+        finishOfflineDataAuthentication(CDA, true);
     }
 
     private void doDDAProcess() {

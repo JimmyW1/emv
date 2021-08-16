@@ -48,6 +48,11 @@ public class TVR {
         this.callback = callback;
     }
 
+    public TVR(String actionCodeHex) {
+        actionCodeHex = StringUtil.getNonNullStringRightPadding(actionCodeHex, 10);
+        tvr = StringUtil.hexStr2Bytes(actionCodeHex);
+    }
+
     public void clear() {
         Arrays.fill(tvr, (byte) 0x00);
     }
@@ -65,6 +70,106 @@ public class TVR {
                 bytePosition = 0;
                 bitPosition = (byte) 0x80;
                 break;
+            case FLAG_SDA_FAILED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_ICC_DATA_MISSING:
+                bytePosition = 0;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_CARD_EXIST_ON_EXCEPTION_FILE_22:
+                bytePosition = 0;
+                bitPosition = (byte) 0x10;
+                break;
+            case FLAG_DDA_FAILED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x08;
+                break;
+            case FLAG_CDA_FAILED:
+                bytePosition = 0;
+                bitPosition = (byte) 0x04;
+                break;
+            case FLAG_ICC_TERMINAL_HAVE_DIFFERENT_APP_VERSION:
+                bytePosition = 1;
+                bitPosition = (byte) 0x80;
+                break;
+            case FLAG_EXPIRED_APPLICATION:
+                bytePosition = 1;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_APPLICATION_NOT_YET_EFFECTIVE:
+                bytePosition = 1;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_REQUEST_SERVICE_NOT_ALLOW_FOR_CARD_PRODUCT:
+                bytePosition = 1;
+                bitPosition = (byte) 0x10;
+                break;
+            case FLAG_NEW_CARD:
+                bytePosition = 1;
+                bitPosition = (byte) 0x08;
+                break;
+            case FLAG_CARDHOLDER_VERIFICATION_WAS_NOT_SUCCESSFUL:
+                bytePosition = 2;
+                bitPosition = (byte) 0x80;
+                break;
+            case FLAG_UNRECOGNISED_CVM:
+                bytePosition = 2;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_PIN_TRY_LIMIT_EXCEEDED:
+                bytePosition = 2;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_PIN_REQ_PINPAD_NOT_PRESENT_OR_NOT_WORKING:
+                bytePosition = 2;
+                bitPosition = (byte) 0x10;
+                break;
+            case FLAG_PIN_REQ_PINPAD_NOT_PRESENT_PIN_WAS_NOT_ENTERED:
+                bytePosition = 2;
+                bitPosition = (byte) 0x08;
+                break;
+            case FLAG_ONLINE_PIN_ENTERED:
+                bytePosition = 2;
+                bitPosition = (byte) 0x04;
+                break;
+            case FLAG_TRANSACTION_EXCEEDS_FLOOR_LIMIT:
+                bytePosition = 3;
+                bitPosition = (byte) 0x80;
+                break;
+            case FLAG_LOWER_CONSECUTIVE_OFFLINE_LIMIT_EXCEEDED:
+                bytePosition = 3;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_UPPER_CONSECUTIVE_OFFLINE_LIMIT_EXCEEDED:
+                bytePosition = 3;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_TRANSACTION_SELECTED_RANDOMLY_FOR_ONLINE_PROCESSING:
+                bytePosition = 3;
+                bitPosition = (byte) 0x10;
+                break;
+            case FLAG_MERCHANT_FORCED_TRANSACTION_ONLINE:
+                bytePosition = 3;
+                bitPosition = (byte) 0x08;
+                break;
+            case FLAG_DEFAULT_TDOL_USED:
+                bytePosition = 4;
+                bitPosition = (byte) 0x80;
+                break;
+            case FLAG_ISSUER_AUTHENTICATION_FAILED:
+                bytePosition = 4;
+                bitPosition = (byte) 0x40;
+                break;
+            case FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC:
+                bytePosition = 4;
+                bitPosition = (byte) 0x20;
+                break;
+            case FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC:
+                bytePosition = 4;
+                bitPosition = (byte) 0x10;
+                break;
             default:
                 return;
         }
@@ -78,5 +183,16 @@ public class TVR {
         if (callback != null) {
             callback.onDataChanged(getTVRHex());
         }
+    }
+
+    public boolean isFlagTrue(int bit) {
+        if (bit < 0 || bit >= tvr.length * 8) {
+            return false;
+        }
+
+        int bytePosition = bit / 8;
+        byte bitPosition = (byte) (bit % 8);
+
+        return (tvr[bytePosition] & (0x01 << bitPosition)) > 0;
     }
 }

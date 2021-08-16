@@ -87,7 +87,11 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onTransactionResult(emvResultInfo: EmvResultInfo?) {
-        TODO("Not yet implemented")
+        var handler = Handler(Looper.getMainLooper());
+        handler.post {
+            var result = emvResultInfo.toString();
+            Toast.makeText(context, result, Toast.LENGTH_LONG).show();
+        };
     }
 
     override fun onRequestOnlinePIN() {

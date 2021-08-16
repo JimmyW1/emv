@@ -9,6 +9,7 @@ import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.TransRecord;
+import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
@@ -46,6 +47,7 @@ public class TerminalRiskManagementState extends AbstractEmvState {
         // 3. Velocity Checking
         velocityChecking();
 
+        getEmvTransData().getTsi().markFlag(TSI.FLAG_TERMINAL_RISK_MANAGEMENT_WAS_PERFORMED, true);
         jumpToState(EmvStateType.STATE_TERMINAL_ACTION_ANALYSIS);
         sendMessage(new Msg_StartTerminalActionAnalysis());
     }
