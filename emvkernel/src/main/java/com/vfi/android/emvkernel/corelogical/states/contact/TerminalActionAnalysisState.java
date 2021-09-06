@@ -40,19 +40,22 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
     }
 
     private void processStartTerminalActionAnalysisMessage(Message message) {
+        LogUtil.d(TAG, "TVR=[" + getEmvTransData().getTvr().getTVRHex() + "]");
         String tacDefault = getTerminalActionCode(ParamTag.TAC_DEFAULT);
         String tacOnline = getTerminalActionCode(ParamTag.TAC_ONLINE);
         String tacDenial = getTerminalActionCode(ParamTag.TAC_DENIAL);
-        LogUtil.d(TAG, "tacDefault=[" + tacDefault + "]");
-        LogUtil.d(TAG, "tacOnline=[" + tacOnline + "]");
-        LogUtil.d(TAG, "tacDenial=[" + tacDenial + "]");
 
         String iacDefault = getIssuerActionCode(EMVTag.tag9F0D);
         String iacOnline = getIssuerActionCode(EMVTag.tag9F0F);
         String iacDenial = getIssuerActionCode(EMVTag.tag9F0E);
         LogUtil.d(TAG, "iacDefault=[" + iacDefault + "]");
+        LogUtil.d(TAG, "tacDefault=[" + tacDefault + "]");
+
         LogUtil.d(TAG, "iacOnline=[" + iacOnline + "]");
+        LogUtil.d(TAG, "tacOnline=[" + tacOnline + "]");
+
         LogUtil.d(TAG, "iacDenial=[" + iacDenial + "]");
+        LogUtil.d(TAG, "tacDenial=[" + tacDenial + "]");
 
         TVR tacDefaultVal = new TVR(tacDefault);
         TVR tacOnlineVal = new TVR(tacOnline);
@@ -235,7 +238,8 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
     private boolean isExistTvrFlagTrue(TVR tac, TVR iac) {
         TVR tvr = getEmvTransData().getTvr();
         for (int i = 0; i < 40; i++) {
-            if (tvr.isFlagTrue(i) == tac.isFlagTrue(i) || tvr.isFlagTrue(i) == iac.isFlagTrue(i)) {
+            if (tvr.isFlagTrue(i) && (tvr.isFlagTrue(i) == tac.isFlagTrue(i) || tvr.isFlagTrue(i) == iac.isFlagTrue(i))) {
+                LogUtil.d(TAG, "Bit[" + i + "] is true.");
                 return true;
             }
         }
