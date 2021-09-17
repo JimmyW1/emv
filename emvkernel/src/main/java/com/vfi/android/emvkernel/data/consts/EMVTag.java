@@ -336,4 +336,11 @@ public class EMVTag {
      * an VAR ..64
      */
     public final static String tag9F7C = "9F7C";
+
+    /**
+     * Transaction Certificate (TC) Hash Value
+     * Result of a hash function specified in Book 2, Annex B3.1
+     * Terminal b — '98' 20
+     */
+    public final static String tag98 = "98";
 }

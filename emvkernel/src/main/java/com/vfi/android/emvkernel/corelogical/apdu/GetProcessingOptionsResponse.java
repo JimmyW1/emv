@@ -38,10 +38,10 @@ public class GetProcessingOptionsResponse extends ApduResponse {
                     LogUtil.d(TAG, "Error: TAG77 Missing AIP AFL");
                     setErrorCode(EMVResultCode.ERR_MISSING_AIP_AFL);
                 } else {
-                    LogUtil.d(TAG, "AIP=[" + EMVTag.tag82 + "]");
-                    LogUtil.d(TAG, "AFL=[" + EMVTag.tag94 + "]");
                     AIP = tlvMap.get(EMVTag.tag82);
                     AFL = tlvMap.get(EMVTag.tag94);
+                    LogUtil.d(TAG, "AIP=[" + AIP + "]");
+                    LogUtil.d(TAG, "AFL=[" + AFL + "]");
                 }
             } else {
                 setSuccess(false);

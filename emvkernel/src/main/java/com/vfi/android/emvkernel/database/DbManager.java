@@ -62,9 +62,9 @@ public class DbManager implements IDbOperation {
     public List<String> getEmvAppParamList(int groupId) {
         List<String> appParamList = new ArrayList<>();
         String terminalCap = "9F3303E0F8C8"; // support SDA DDA CDA
-        String terminalCap1 = "9F3303E0F8A0"; // support SDA CDA
-        String terminalCap2 = "9F3303E0F840"; // support DDA
-        String terminalParameters = terminalCap2;
+//        String terminalCap1 = "9F3303E0F8A0"; // support SDA CDA
+//        String terminalCap2 = "9F3303E0F840"; // support DDA
+        String terminalParameters = terminalCap;
         String terminalType = ParamTag.APP_TERMINAL_TYPE + "01" + "22";
         String versionNum = ParamTag.VER_NUM + "02" + "0200";
         String floorLimit = ParamTag.FLOOR_LIMIT + "06" + "000000000000";

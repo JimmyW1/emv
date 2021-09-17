@@ -42,6 +42,7 @@ public class ReadCardState extends AbstractEmvState {
         // follow book 3 page 90
         getEmvTransData().clearTVR_TSI_CvmResult();
         String pdolTags = getPDOLData();
+        getEmvTransData().setPdolData(pdolTags);
         byte[] retData = executeApduCmd(new GetProcessingOptionsCmd(pdolTags));
         GetProcessingOptionsResponse response = new GetProcessingOptionsResponse(retData);
         String offlineDataToBeAuth = "";

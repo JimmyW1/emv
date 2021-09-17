@@ -50,9 +50,33 @@ public class AIP {
     }
 
     public boolean isSupportCDA() {
-        boolean isSupportCDA = (aip[1] & 0x01) > 0;
+        boolean isSupportCDA = (aip[0] & 0x01) > 0;
         LogUtil.d(TAG, "CARD SupportCDA[" + isSupportCDA + "]");
         return isSupportCDA;
+    }
+
+    public boolean isOnDeviceCardHolderVerificationNotSupport() {
+        boolean isOnDeviceCardHolderVerificationNotSupport = (aip[0] & 0x02) > 0;
+        LogUtil.d(TAG, "CARD IsOnDeviceCardHolderVerificationNotSupport[" + isOnDeviceCardHolderVerificationNotSupport + "]");
+        return isOnDeviceCardHolderVerificationNotSupport;
+    }
+
+    public boolean isSupportGenerateAC() {
+        boolean isSupportGenerateAC = (aip[0] & 0x04) > 0;
+        LogUtil.d(TAG, "CARD SupportGenerateACCommand[" + isSupportGenerateAC + "]");
+        return isSupportGenerateAC;
+    }
+
+    public boolean isSupportTerminalRiskManagement() {
+        boolean isSupportTerminalRiskManagement = (aip[0] & 0x08) > 0;
+        LogUtil.d(TAG, "CARD SupportTerminalRiskManagement[" + isSupportTerminalRiskManagement + "]");
+        return isSupportTerminalRiskManagement;
+    }
+
+    public boolean isSupportCardHolderVerification() {
+        boolean isSupportCardHolderVerification = (aip[0] & 0x10) > 0;
+        LogUtil.d(TAG, "CARD SupportCardHolderVerification[" + isSupportCardHolderVerification + "]");
+        return isSupportCardHolderVerification;
     }
 
     public boolean isSupportDDA() {
@@ -67,15 +91,5 @@ public class AIP {
         return isSupportSDA;
     }
 
-    public boolean isSupportCardHolderVerification() {
-        boolean isSupportCardHolderVerification = (aip[0] & 0x10) > 0;
-        LogUtil.d(TAG, "CARD SupportCardHolderVerification[" + isSupportCardHolderVerification + "]");
-        return isSupportCardHolderVerification;
-    }
 
-    public boolean isSupportTerminalRiskManagement() {
-        boolean isSupportTerminalRiskManagement = (aip[0] & 0x08) > 0;
-        LogUtil.d(TAG, "CARD SupportTerminalRiskManagement[" + isSupportTerminalRiskManagement + "]");
-        return isSupportTerminalRiskManagement;
-    }
 }

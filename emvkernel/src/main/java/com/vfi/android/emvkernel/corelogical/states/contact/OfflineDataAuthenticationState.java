@@ -53,7 +53,9 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
         int supportMode = checkSupportOfflineDataAuthMethod();
         if (supportMode == NOT_SUPPORT) {
             getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
-            // TODO jump to next state
+            jumpToState(EmvStateType.STATE_PROCESSING_RESTRICTIONS);
+            sendMessage(new Msg_StartProcessingRestrictions());
+            return;
         }
 
         if (checkIfMissingMandatoryData(supportMode)) {
@@ -80,6 +82,11 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
             doDDAProcess();
         } else if (supportMode == SDA) {
             doSDAProcess();
+        } else {
+            LogUtil.d(TAG, "Not support Offline data authenticationsState");
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
+            jumpToState(EmvStateType.STATE_PROCESSING_RESTRICTIONS);
+            sendMessage(new Msg_StartProcessingRestrictions());
         }
     }
 
@@ -192,6 +199,7 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doSDAProcess() {
+        LogUtil.d(TAG, "doSDAProcess");
         //12. If all the checks above are correct, concatenate the Leftmost Digits of the
         //Issuer Public Key and the Issuer Public Key Remainder (if present) to
         //obtain the Issuer Public Key Modulus, and continue with the next steps
@@ -307,6 +315,14 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doCDAProcess() {
+        LogUtil.d(TAG, "doCDAProcess");
+
+        if (!retrievalICCPublicKey()) {
+            LogUtil.d(TAG, "Retrieval ICC Public Key failed!!");
+            finishOfflineDataAuthentication(CDA, false);
+            return;
+        }
+
         int cdaMode = getEmvContext().getEmvParams().getCdaMode();
         LogUtil.d(TAG, "CDAMode=[" + cdaMode + "]");
         switch (cdaMode) {
@@ -321,6 +337,8 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
                 finishOfflineDataAuthentication(CDA, false);
                 return;
             case CDAMode.MODE4:
+                // Book2 Page78, if request CDA but first GAC not perform CDA need set this flag.
+                getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
                 getEmvTransData().setDoCDAInSecondGAC(true);
                 break;
         }
@@ -330,6 +348,8 @@ public class OfflineDataAuthenticationState extends AbstractEmvState {
     }
 
     private void doDDAProcess() {
+        LogUtil.d(TAG, "doDDAProcess");
+
         if (!retrievalICCPublicKey()) {
             LogUtil.d(TAG, "Retrieval ICC Public Key failed!!");
             finishOfflineDataAuthentication(DDA, false);

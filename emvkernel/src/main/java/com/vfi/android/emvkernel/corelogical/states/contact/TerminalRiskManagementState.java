@@ -31,7 +31,13 @@ public class TerminalRiskManagementState extends AbstractEmvState {
         Message message = context.getMessage();
         LogUtil.d(TAG, "TerminalRiskManagementState msgType=" + message.getMessageType());
         if (message instanceof Msg_StartTerminalRiskManagement) {
-            performTerminalRiskManagementMessage(message);
+            if (getEmvTransData().getAIP().isSupportTerminalRiskManagement()) {
+                performTerminalRiskManagementMessage(message);
+            } else {
+                getEmvTransData().getTsi().markFlag(TSI.FLAG_TERMINAL_RISK_MANAGEMENT_WAS_PERFORMED, false);
+                jumpToState(EmvStateType.STATE_TERMINAL_ACTION_ANALYSIS);
+                sendMessage(new Msg_StartTerminalActionAnalysis());
+            }
         }
     }
 

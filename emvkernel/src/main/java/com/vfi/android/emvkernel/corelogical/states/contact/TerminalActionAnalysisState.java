@@ -17,6 +17,8 @@ import com.vfi.android.emvkernel.data.consts.EMVTag;
 import com.vfi.android.emvkernel.data.consts.ParamTag;
 import com.vfi.android.emvkernel.data.consts.TerminalTag;
 import com.vfi.android.emvkernel.utils.DOLUtil;
+import com.vfi.android.emvkernel.utils.SecurityUtil;
+import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
 
@@ -80,7 +82,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
          * of handling a rejected transaction are outside the scope of this specification.
          */
         if (isExistTvrFlagTrue(tacDenialVal, iacDenialVal)) {
-            performAAC(isRequireCDA);
+            performAAC(true, isRequireCDA);
             makeCardRiskManagementWasPerform();
             return;
         }
@@ -115,9 +117,9 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
              * GENERATE AC command to 1.
              */
             if (isExistTvrFlagTrue(tacDefaultVal, iacDefaultVal)) {
-                performAAC(isRequireCDA);
+                performAAC(true, isRequireCDA);
             } else {
-                performTC(isRequireCDA);
+                performTC(true, isRequireCDA);
             }
         } else { // online terminal
             /**
@@ -140,20 +142,37 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
              * from the ICC.
              */
             if (isExistTvrFlagTrue(tacOnlineVal, iacOnlineVal)) {
-                performARQC(isRequireCDA);
+                performARQC(true, isRequireCDA);
             } else {
-                performTC(isRequireCDA);
+                performTC(true, isRequireCDA);
             }
         }
 
         makeCardRiskManagementWasPerform();
     }
 
-    private void performAAC(boolean isRequireCDA) {
+    private void performAAC(boolean isFirstGAC, boolean isRequireCDA) {
         LogUtil.d(TAG, "TAA result AAC.");
         // rejected transaction offline
-        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_AAC, isRequireCDA, getGenerateACCommandData(true)));
-        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(ret);
+
+        if (isRequireCDA) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
+        }
+
+        /**
+         * CDA no need perform when execute AAC.
+         *
+         * Book2: Page70
+         * The cryptogram to be requested is not an Application Authentication
+         * Cryptogram (AAC), i.e. Terminal Action Analysis has not resulted in
+         * offline decline.
+         *
+         * Book2: Page71
+         * When requesting an AAC, the terminal shall request it without a CDA
+         * signature.
+         */
+        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_AAC, false, getGenerateACCommandData(true)));
+        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(false, ret);
         if (response.isSuccess()) {
             setErrorCode(EMVResultCode.ERR_TAA_RESULT_AAC);
             getEmvHandler().onTransactionResult(new EmvResultInfo(true, getEmvTransData().getErrorCode()));
@@ -166,11 +185,55 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         return;
     }
 
-    private void performARQC(boolean isRequireCDA) {
+    private void performARQC(boolean isFirstGAC, boolean isRequireCDA) {
         LogUtil.d(TAG, "TAA result ARQC.");
         // transaction online
         byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_ARQC, isRequireCDA, getGenerateACCommandData(true)));
-        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(ret);
+        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(isRequireCDA, ret);
+        if (response.isSuccess()) {
+            if (isRequireCDA) {
+                if (response.getIssuerApplicationData() != null) {
+                    verifySignedDynamicApplicationData(isFirstGAC, response);
+                }
+            }
+
+            return;
+        } else {
+
+        }
+    }
+
+    private void performTC(boolean isFirstGAC, boolean isRequireCDA) {
+        LogUtil.d(TAG, "TAA result TC.");
+        if (isFirstGAC) {
+            /**
+             * Book2, Page71
+             *
+             * When requesting a TC, the terminal shall request it with a CDA signature.
+             */
+            boolean isRequireCDA2GAC = getEmvTransData().isDoCDAInSecondGAC();
+            isRequireCDA = isRequireCDA2GAC || isRequireCDA;
+            LogUtil.d(TAG, "PerformTC isRequireCDA=" + isRequireCDA);
+        } else if (isRequireCDA) {
+            /**
+             * In the case of the second GENERATE AC command:
+             * • The terminal shall set the TVR bit for 'Offline data authentication was not
+             * performed' to 025 prior to issuance of the GENERATE AC command. If the
+             * terminal is processing the transaction as ‘unable to go online’ then the
+             * TVR bit setting shall be done before the associated terminal action analysis.
+             *
+             * • When requesting a TC:
+             *  If the terminal is processing the transaction as 'unable to go online'
+             * (and the result of terminal action analysis is to request a TC), then the
+             * terminal shall request a TC with a CDA signature.
+             *  If the terminal is not processing the transaction as ‘unable to go
+             * online’, then the terminal may request the TC with or without a CDA signature.
+             */
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, false);
+        }
+        // transaction offline approval
+        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_TC, isRequireCDA, getGenerateACCommandData(true)));
+        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(isRequireCDA, ret);
         if (response.isSuccess()) {
 
             return;
@@ -179,18 +242,219 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         }
     }
 
-    private void performTC(boolean isRequireCDA) {
-        LogUtil.d(TAG, "TAA result TC.");
-        // transaction offline approval
-        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_TC, isRequireCDA, getGenerateACCommandData(true)));
-        GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(ret);
-        if (response.isSuccess()) {
+    private boolean verifySignedDynamicApplicationData(boolean isFirstGAC, GenerateApplicationCryptogramResponse response) {
+        LogUtil.d(TAG, "verifySignedDynamicApplicationData");
 
-            return;
-        } else {
+        String signedDynamicApplicationData = response.getSignedDynamicApplicationData();
+        /**
+         * 1. If the Signed Dynamic Application Data has a length different from the
+         * length of the ICC Public Key Modulus, CDA has failed.
+         */
+        LogUtil.d(TAG, "Signed Dynamic Application Data=[" + signedDynamicApplicationData + "]");
+        String iccPublicKey = getEmvTransData().getIccPublicKey();
 
+        if (iccPublicKey == null || iccPublicKey.length() != signedDynamicApplicationData.length()) {
+            LogUtil.d(TAG, "Signed Dynamic Application Data has a length different from the length of the ICC Public Key Modulus");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_HAVE_DIFFERENT_LENGTH_WITH_PUBLIC_KEY);
+            return false;
         }
 
+        byte[] signedDynamicApplicationDataBytes = StringUtil.hexStr2Bytes(signedDynamicApplicationData);
+        byte[] iccPublicKeyModulesBytes = StringUtil.hexStr2Bytes(iccPublicKey);
+        byte[] iccPublicKeyExponent = StringUtil.hexStr2Bytes(getEmvTransData().getTagMap().get(EMVTag.tag9F47));
+        byte[] iccSignDataRecoveredBytes = SecurityUtil.signRecover(signedDynamicApplicationDataBytes, iccPublicKeyExponent, iccPublicKeyModulesBytes);
+        String recoveredSignedDynamicAppDataHex = StringUtil.byte2HexStr(iccSignDataRecoveredBytes);
+        LogUtil.d(TAG, "recoveredSignedDynamicAppDataHex=[" + recoveredSignedDynamicAppDataHex + "]");
+
+        if (recoveredSignedDynamicAppDataHex == null || recoveredSignedDynamicAppDataHex.length() < 25 * 2) {
+            LogUtil.d(TAG, "Recovered sign dynamic app data failed.");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_RECOVERED_FAILED);
+            return false;
+        }
+
+        /**
+         * 2. To obtain the recovered data specified in Table 22, apply the recovery
+         * function as specified in Annex A2.1 on the Signed Dynamic Application
+         * Data using the ICC Public Key in conjunction with the corresponding
+         * algorithm. If the Recovered Data Trailer is not equal to 'BC', CDA has failed.
+         */
+        if (!recoveredSignedDynamicAppDataHex.endsWith("BC")) {
+            LogUtil.d(TAG, "Recovered Data Trailer is not equal to 'BC'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_TRAILER_NOT_BC);
+            return false;
+        }
+
+        // 3. Check the Recovered Data Header. If it is not '6A', CDA has failed.
+        if (!recoveredSignedDynamicAppDataHex.startsWith("6A")) {
+            LogUtil.d(TAG, "Recovered Data Header is not equal to '6A'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_HEADER_NOT_6A);
+            return false;
+        }
+
+        //4. Check the Signed Data Format. If it is not '05', CDA has failed.
+        if (!recoveredSignedDynamicAppDataHex.startsWith("05", 2)) {
+            LogUtil.d(TAG, "Recovered Data Certificate Format not equal to '05'");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_CERTIFICATE_FORMAT_NOT_05);
+            return false;
+        }
+
+        // 5. Retrieve from the ICC Dynamic Data the data specified in Table 19.
+        /**
+         * Book2, Page73
+         * Length           Value                     Format
+         * ----------|------------------------------|---------------------
+         * 1            ICC Dynamic Number Length     b
+         * 2-8          ICC Dynamic Number            b
+         * 1            Cryptogram Information Data   b
+         * 8            TC or ARQC                    b
+         * 20           Transaction Data Hash Code    b
+         * ---------------------------------------------------------------
+         * Table 19: 32-38 Leftmost Bytes of ICC Dynamic Data
+         */
+        int iccDynamicDataLengthStartIndex = (1+1+1) * 2;
+        String iccDynamicDataLengthHex = recoveredSignedDynamicAppDataHex.substring(iccDynamicDataLengthStartIndex, iccDynamicDataLengthStartIndex + 2);
+        int iccDynamicDataLength = StringUtil.parseInt(iccDynamicDataLengthHex, 16, 0);
+        LogUtil.d(TAG, "iccDynamicDataLength=[" + iccDynamicDataLength + "]");
+
+        int iccDynamicDataStartIndex = (1+1+1+1) * 2;
+        String iccDynamicDataHex = recoveredSignedDynamicAppDataHex.substring(iccDynamicDataStartIndex, iccDynamicDataStartIndex + iccDynamicDataLength * 2);
+        LogUtil.d(TAG, "iccDynamicDataHex=[" + iccDynamicDataHex + "]");
+
+        if (iccDynamicDataHex.length() < 32 * 2 || iccDynamicDataHex.length() > 38 * 2) {
+            LogUtil.d(TAG, "Wrong icc dynamic data");
+            setErrorCode(EMVResultCode.ERR_WRONG_ICC_DYNAMIC_DATA);
+            return false;
+        }
+
+        int index = 0;
+        String iccDynamicNumberLengthHex = iccDynamicDataHex.substring(index, index + 2);
+        int iccDynamicNumberLength = StringUtil.parseInt(iccDynamicNumberLengthHex, 16, 0);
+        LogUtil.d(TAG, "iccDynamicNumberLength=[" + iccDynamicNumberLength + "]");
+        index += 2;
+
+        String iccDynamicNumberHex = iccDynamicDataHex.substring(index, index + iccDynamicNumberLength * 2);
+        LogUtil.d(TAG, "iccDynamicNumberHex=[" + iccDynamicNumberHex + "]");
+        index += iccDynamicNumberLength * 2;
+
+        String cryptogramInformationDataHex = iccDynamicDataHex.substring(index, index + 2);
+        LogUtil.d(TAG, "cryptogramInformationDataHex=[" + cryptogramInformationDataHex + "]");
+        index += 2;
+
+        String tcOrArqcHex = iccDynamicDataHex.substring(index, index + 8 * 2);
+        LogUtil.d(TAG, "tcOrArqcHex=[" + tcOrArqcHex + "]");
+        getEmvTransData().getTagMap().put(EMVTag.tag9F26, tcOrArqcHex);
+        LogUtil.d(TAGS.SAVE_TAG, "putTag tag[" + EMVTag.tag9F26 + "]=[" + tcOrArqcHex + "]");
+        index += 16;
+
+        String transDataHashCode = iccDynamicDataHex.substring(index, index + 20 * 2);
+        LogUtil.d(TAG, "transDataHashCode=[" + transDataHashCode + "]");
+
+        /**
+         * 6. Check that the Cryptogram Information Data retrieved from the ICC
+         * Dynamic Data is equal to the Cryptogram Information Data obtained from
+         * the response to the GENERATE AC command. If this is not the case, CDA
+         * has failed.
+         */
+        if (!cryptogramInformationDataHex.equals(response.getCid())) {
+            LogUtil.d(TAG, "CID data is different");
+            setErrorCode(EMVResultCode.ERR_CID_DATA_DIFFERENT);
+            return false;
+        }
+
+        /**
+         * 7. Concatenate from left to right the second to the sixth data elements in
+         * Table 22 (that is, Signed Data Format through Pad Pattern), followed by
+         * the Unpredictable Number.
+         * 8. Apply the indicated hash algorithm (derived from the Hash Algorithm
+         * Indicator) to the result of the concatenation of the previous step to
+         * produce the hash result.
+         * 9. Compare the calculated hash result from the previous step with the
+         * recovered Hash Result. If they are not the same, CDA has failed.
+         */
+        String hexData = recoveredSignedDynamicAppDataHex.substring(2, recoveredSignedDynamicAppDataHex.length() - 2 - 40);
+        String unpredictableNumber = getEmvTransData().getTagMap().get(EMVTag.tag9F37);
+        hexData += unpredictableNumber;
+        LogUtil.d(TAG, "hexData=[" + hexData + "]");
+
+        int hashIndicatorStartIndex = (1+1) * 2;
+        String hashIndicator = recoveredSignedDynamicAppDataHex.substring(hashIndicatorStartIndex, hashIndicatorStartIndex + 2);
+        LogUtil.d(TAG, "hashIndicator=[" + hashIndicator + "]");
+        if (hashIndicator.equals("01")) {
+            String hashHex = SecurityUtil.calculateSha1(hexData);
+            String signedDynamicApplicationDataHash = recoveredSignedDynamicAppDataHex.substring(recoveredSignedDynamicAppDataHex.length() - 2 - 40, recoveredSignedDynamicAppDataHex.length() - 2);
+            LogUtil.d(TAG, "calculate hash hex=[" + hashHex + "], signedDynamicApplicationDataHash hash hex=[" + signedDynamicApplicationDataHash + "]");
+
+            if (!signedDynamicApplicationDataHash.equals(hashHex)) {
+                LogUtil.d(TAG, "Hash not the same, CDA failed.");
+                setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_RECOVERED_DATA_HASH_WRONG);
+                return false;
+            }
+        } else {
+            LogUtil.d(TAG, "Hash indicator =[" + hashIndicator + "] not support");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_HASH_INDICATOR_ALGO_NOT_SUPPORT);
+            return false;
+        }
+
+        /**
+         * 10. Concatenate from left to right the values of the following data elements:
+         * In the case of the first GENERATE AC command:
+         *  The values of the data elements specified by, and in the order they
+         * appear in the PDOL, and sent by the terminal in the GET
+         * PROCESSING OPTIONS command.
+         *  The values of the data elements specified by, and in the order they
+         * appear in the CDOL1, and sent by the terminal in the first
+         * GENERATE AC command.
+         *  The tags, lengths, and values of the data elements returned by the ICC
+         * in the response to the GENERATE AC command in the order they are
+         * returned, with the exception of the Signed Dynamic Application Data.
+         * In the case of the second GENERATE AC command:
+         *  The values of the data elements specified by, and in the order they
+         * appear in the PDOL, and sent by the terminal in the GET
+         * PROCESSING OPTIONS command.
+         *  The values of the data elements specified by, and in the order they
+         * appear in the CDOL1, and sent by the terminal in the first
+         * GENERATE AC command.
+         *  The values of the data elements specified by, and in the order they
+         * appear in the CDOL2, and sent by the terminal in the second
+         * GENERATE AC command.
+         *  The tags, lengths, and values of the data elements returned by the ICC
+         * in the response to the GENERATE AC command in the order they are
+         * returned, with the exception of the Signed Dynamic Application Data.
+         *
+         * 11. Apply the indicated hash algorithm (derived from the Hash Algorithm
+         * Indicator) to the result of the concatenation of the previous step to
+         * produce the Transaction Data Hash Code.
+         *
+         * 12. Compare the calculated Transaction Data Hash Code from the previous
+         * step with the Transaction Data Hash Code retrieved from the ICC
+         * Dynamic Data in Step 5. If they are not the same, CDA has failed.
+         */
+        hexData = "";
+        hexData += getEmvTransData().getPdolData();
+        LogUtil.d(TAG, "PDOL Data=[" + getEmvTransData().getPdolData() + "]");
+        hexData += getEmvTransData().getCdol1Data();
+        LogUtil.d(TAG, "CDOL1 Data=[" + getEmvTransData().getCdol1Data() + "]");
+        if (!isFirstGAC) {
+            hexData += getEmvTransData().getCdol2Data();
+            LogUtil.d(TAG, "CDOL2 Data=[" + getEmvTransData().getCdol2Data() + "]");
+        }
+
+        String responseData = response.getTlvMap().get(EMVTag.tag77);
+        int signedDynamicAppDataIndex = responseData.indexOf(signedDynamicApplicationData);
+        // 8 is signedDynamicApplicationData TAG + length
+        hexData += responseData.substring(0, signedDynamicAppDataIndex - 8) + responseData.substring(signedDynamicAppDataIndex + signedDynamicApplicationData.length());
+        LogUtil.d(TAG, "hexData2=[" + hexData + "]");
+
+        String hashHex = SecurityUtil.calculateSha1(hexData);
+        LogUtil.d(TAG, "calculate hash hex=[" + hashHex + "], transDataHashCode hash hex=[" + transDataHashCode + "]");
+
+        if (!transDataHashCode.equals(hashHex)) {
+            LogUtil.d(TAG, "Hash not the same, CDA failed.");
+            setErrorCode(EMVResultCode.ERR_SIGNED_DYNAMIC_APP_DATA_TRANS_DATA_HASH_WRONG);
+            return false;
+        }
+
+        return true;
     }
 
     private void makeCardRiskManagementWasPerform() {
@@ -223,6 +487,11 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
             }
         }
 
+        if (isFirstGAC) {
+            getEmvTransData().setCdol1Data(cdolData);
+        } else {
+            getEmvTransData().setCdol2Data(cdolData);
+        }
         LogUtil.d(TAG, "CDOL data hex=[" + cdolData + "]");
         return StringUtil.hexStr2Bytes(cdolData);
     }
@@ -232,7 +501,38 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
      * use TDOL
      */
     private void calculateTCHashValue() {
+        LogUtil.d(TAG, "calculateTCHashValue");
+        List<DOLBean> dolBeanList;
 
+        if (getEmvTransData().getTagMap().containsKey(EMVTag.tag97)) {
+            String tdol = getEmvTransData().getTagMap().get(EMVTag.tag97);
+            LogUtil.d(TAG, "TDOL tag list=[" + tdol + "]");
+            dolBeanList = DOLUtil.toDOLDataList(tdol);
+        } else if (getEmvTransData().getSelectAppTerminalParamsMap().containsKey(ParamTag.DEFAULT_TDOL)) {
+            String defaultTdol = getEmvTransData().getSelectAppTerminalParamsMap().get(ParamTag.DEFAULT_TDOL);
+            LogUtil.d(TAG, "Default TDOL tag list=[" + defaultTdol + "]");
+            dolBeanList = DOLUtil.toDOLDataList(defaultTdol);
+        } else {
+            return;
+        }
+
+        Map<String, String> tagMap = getEmvTransData().getTagMap();
+        String tdolData = "";
+        for (DOLBean dolBean : dolBeanList) {
+            if (TerminalTag.tag98.equals(dolBean.getTag())) {
+                calculateTCHashValue();
+            }
+
+            if (tagMap.containsKey(dolBean.getTag())) {
+                tdolData += dolBean.formatValue(tagMap.get(dolBean.getTag()));
+            } else {
+                tdolData += StringUtil.getNonNullStringLeftPadding("0", dolBean.getLen() * 2);
+            }
+        }
+
+        String hashHex = SecurityUtil.calculateSha1(StringUtil.byte2HexStr(tdolData.getBytes()));
+        LogUtil.d(TAG, "hash Hex=[" + hashHex + "]");
+        getEmvTransData().getTagMap().put(EMVTag.tag98, hashHex);
     }
 
     private boolean isExistTvrFlagTrue(TVR tac, TVR iac) {

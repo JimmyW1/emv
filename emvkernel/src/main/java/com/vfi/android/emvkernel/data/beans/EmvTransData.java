@@ -37,6 +37,9 @@ public class EmvTransData {
     private CvmResult cvmResult;
     private boolean doCDAInFirstGAC;
     private boolean doCDAInSecondGAC;
+    private String pdolData;
+    private String cdol1Data;
+    private String cdol2Data;
 
     public EmvTransData() {
         candidateList = new ArrayList<>();
@@ -287,5 +290,29 @@ public class EmvTransData {
         }
 
         return terminalType;
+    }
+
+    public String getPdolData() {
+        return pdolData;
+    }
+
+    public void setPdolData(String pdolData) {
+        this.pdolData = pdolData;
+    }
+
+    public String getCdol1Data() {
+        return cdol1Data;
+    }
+
+    public void setCdol1Data(String cdol1Data) {
+        this.cdol1Data = cdol1Data;
+    }
+
+    public String getCdol2Data() {
+        return cdol2Data;
+    }
+
+    public void setCdol2Data(String cdol2Data) {
+        this.cdol2Data = cdol2Data;
     }
 }

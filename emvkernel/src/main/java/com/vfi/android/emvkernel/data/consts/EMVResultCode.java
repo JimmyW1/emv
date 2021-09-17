@@ -62,6 +62,17 @@ public class EMVResultCode {
     public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_CERTIFICATE_HASH_WRONG = 1308;
     // TAA
     public static final int ERR_TAA_RESULT_AAC = 1401;
+    // CDA
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_HAVE_DIFFERENT_LENGTH_WITH_PUBLIC_KEY = 1501;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_RECOVERED_FAILED = 1502;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_TRAILER_NOT_BC = 1503;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_HEADER_NOT_6A = 1504;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_CERTIFICATE_FORMAT_NOT_05 = 1505;
+    public static final int ERR_WRONG_ICC_DYNAMIC_DATA = 1506;
+    public static final int ERR_CID_DATA_DIFFERENT = 1507;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_RECOVERED_DATA_HASH_WRONG = 1508;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_HASH_INDICATOR_ALGO_NOT_SUPPORT = 1509;
+    public static final int ERR_SIGNED_DYNAMIC_APP_DATA_TRANS_DATA_HASH_WRONG = 1510;
 
 
 }
