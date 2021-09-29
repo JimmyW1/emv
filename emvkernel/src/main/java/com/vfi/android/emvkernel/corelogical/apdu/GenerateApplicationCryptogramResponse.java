@@ -100,6 +100,18 @@ public class GenerateApplicationCryptogramResponse extends ApduResponse {
         }
     }
 
+    public boolean isCardAAC() {
+        if (cid == null || cid.length() == 0) {
+            return true;
+        }
+
+        byte cidByte = StringUtil.hexStr2Bytes(cid)[0];
+        boolean isCardAAC = ((cidByte & 0xC0) == 0x00);
+        LogUtil.d(TAG, "isCardAAC=[" + isCardAAC + "]");
+
+        return isCardAAC;
+    }
+
     public Map<String, String> getTlvMap() {
         return tlvMap;
     }

@@ -9,7 +9,6 @@ import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.DOLBean;
 import com.vfi.android.emvkernel.data.beans.EmvResultInfo;
-import com.vfi.android.emvkernel.data.beans.tagbeans.CvmResult;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
@@ -173,27 +172,48 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
          */
         byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_AAC, false, getGenerateACCommandData(true)));
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(false, ret);
-        if (response.isSuccess()) {
-            setErrorCode(EMVResultCode.ERR_TAA_RESULT_AAC);
-            getEmvHandler().onTransactionResult(new EmvResultInfo(true, getEmvTransData().getErrorCode()));
-            finishEmv();
-            return;
-        } else {
+        response.saveTags(getEmvTransData().getTagMap());
 
-        }
-
-        return;
+        setErrorCode(EMVResultCode.ERR_TAA_RESULT_AAC);
+        getEmvHandler().onTransactionResult(new EmvResultInfo(true, getEmvTransData().getErrorCode()));
+        finishEmv();
     }
 
     private void performARQC(boolean isFirstGAC, boolean isRequireCDA) {
         LogUtil.d(TAG, "TAA result ARQC.");
+        /**
+         * Book2, Page70
+         * In the case of the first GENERATE AC command:
+         * • When requesting an ARQC, the terminal may request it with or without a
+         * CDA signature. When an ARQC is requested without a CDA signature,
+         * then the terminal shall set the TVR bit for 'Offline data authentication
+         * EMV 4.3 Book 2 6 Offline Dynamic Data Authentication
+         * Security and Key Management 6.6 Combined DDA/AC Generation (CDA) November 2011 Page 71
+         * was not performed' to 124 prior to issuance of the GENERATE AC command.
+         */
+        if (isFirstGAC && !isRequireCDA) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, true);
+        }
         // transaction online
         byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_ARQC, isRequireCDA, getGenerateACCommandData(true)));
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(isRequireCDA, ret);
+        response.saveTags(getEmvTransData().getTagMap());
         if (response.isSuccess()) {
+            if (response.isCardAAC()) {
+                LogUtil.d(TAG, "Card reject transaction.");
+                setErrorCode(EMVResultCode.ERR_TAA_RESULT_CARD_AAC);
+                getEmvHandler().onTransactionResult(new EmvResultInfo(true, getEmvTransData().getErrorCode()));
+                finishEmv();
+                return;
+            }
+
             if (isRequireCDA) {
-                if (response.getIssuerApplicationData() != null) {
-                    verifySignedDynamicApplicationData(isFirstGAC, response);
+                /**
+                 * Book2, Page79 right bottom part
+                 */
+                if (!processCDAResult(isFirstGAC, response)) {
+                    LogUtil.d(TAG, "Card request ARQC but CDA failed.");
+                    performAAC(false, false);
                 }
             }
 
@@ -234,12 +254,54 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         // transaction offline approval
         byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_TC, isRequireCDA, getGenerateACCommandData(true)));
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(isRequireCDA, ret);
+        response.saveTags(getEmvTransData().getTagMap());
         if (response.isSuccess()) {
+            if (response.isCardAAC()) {
+                LogUtil.d(TAG, "Card reject transaction.");
+                doFinishProcess(false, EMVResultCode.ERR_TAA_RESULT_CARD_AAC);
+                return;
+            }
 
-            return;
+            if (isRequireCDA) {
+                /**
+                 * Book2, Page79 right bottom part
+                 */
+                if (!processCDAResult(isFirstGAC, response)) {
+                    LogUtil.d(TAG, "Card request TC but CDA failed.");
+                    doFinishProcess(false, EMVResultCode.ERR_TAA_CDA_FAILED);
+                }
+            }
         } else {
-
+            LogUtil.d(TAG, "Do GenerateAC command failed, error status=[" + response.getStatus() + "]");
+            doFinishProcess(false, EMVResultCode.ERR_TAA_EXECUTE_GAC_FAILED);
         }
+    }
+
+    private void doFinishProcess(boolean isApproval, int errorCode) {
+        if (isApproval) {
+            setErrorCode(EMVResultCode.SUCCESS);
+        } else {
+            setErrorCode(errorCode);
+        }
+        getEmvHandler().onTransactionResult(new EmvResultInfo(!isApproval, getEmvTransData().getErrorCode()));
+        finishEmv();
+    }
+
+    private boolean processCDAResult(boolean isFirstGAC, GenerateApplicationCryptogramResponse response) {
+        boolean isSuccess = false;
+
+        if (response.getIssuerApplicationData() != null) {
+            isSuccess = verifySignedDynamicApplicationData(isFirstGAC, response);
+        }
+
+        if (!isSuccess) {
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, false);
+            getEmvTransData().getTvr().markFlag(TVR.FLAG_CDA_FAILED, true);
+            getEmvTransData().getTsi().markFlag(TSI.FLAG_OFFLINE_DATA_AUTH_WAS_PERFORMED, true);
+        }
+
+        LogUtil.d(TAG, "doCDAResultProcess isSuccess=[" + isSuccess + "]");
+        return isSuccess;
     }
 
     private boolean verifySignedDynamicApplicationData(boolean isFirstGAC, GenerateApplicationCryptogramResponse response) {
@@ -334,6 +396,8 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
 
         String iccDynamicNumberHex = iccDynamicDataHex.substring(index, index + iccDynamicNumberLength * 2);
         LogUtil.d(TAG, "iccDynamicNumberHex=[" + iccDynamicNumberHex + "]");
+        getEmvTransData().getTagMap().put(EMVTag.tag9F4C, iccDynamicNumberHex);
+        LogUtil.d(TAGS.SAVE_TAG, "putTag tag[" + EMVTag.tag9F4C + "]=[" + iccDynamicNumberHex + "]");
         index += iccDynamicNumberLength * 2;
 
         String cryptogramInformationDataHex = iccDynamicDataHex.substring(index, index + 2);

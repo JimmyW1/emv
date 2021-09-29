@@ -62,6 +62,9 @@ public class EMVResultCode {
     public static final int ERR_ICC_PIN_PUB_KEY_RECOVERED_DATA_CERTIFICATE_HASH_WRONG = 1308;
     // TAA
     public static final int ERR_TAA_RESULT_AAC = 1401;
+    public static final int ERR_TAA_RESULT_CARD_AAC = 1402;
+    public static final int ERR_TAA_EXECUTE_GAC_FAILED = 1403;
+    public static final int ERR_TAA_CDA_FAILED = 1404;
     // CDA
     public static final int ERR_SIGNED_DYNAMIC_APP_DATA_HAVE_DIFFERENT_LENGTH_WITH_PUBLIC_KEY = 1501;
     public static final int ERR_SIGNED_DYNAMIC_APP_DATA_RECOVERED_FAILED = 1502;
