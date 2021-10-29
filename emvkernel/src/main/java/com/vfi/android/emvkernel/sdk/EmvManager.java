@@ -5,6 +5,7 @@ import com.vfi.android.emvkernel.corelogical.ContactEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
+import com.vfi.android.emvkernel.data.beans.OnlineResult;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
@@ -95,5 +96,9 @@ public final class EmvManager {
 
     public void setEmvContext(EmvContext emvContext) {
         this.emvContext = emvContext;
+    }
+
+    public void inputOnlineResult(OnlineResult result) {
+        iEmvOperation.inputOnlineResult(result);
     }
 }

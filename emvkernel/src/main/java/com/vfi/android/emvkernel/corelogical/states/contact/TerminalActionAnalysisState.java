@@ -2,6 +2,7 @@ package com.vfi.android.emvkernel.corelogical.states.contact;
 
 import com.vfi.android.emvkernel.corelogical.apdu.GenerateApplicationCryptogramCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.GenerateApplicationCryptogramResponse;
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputOnlineResult;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartTerminalActionAnalysis;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
@@ -9,6 +10,8 @@ import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvStateType;
 import com.vfi.android.emvkernel.data.beans.DOLBean;
 import com.vfi.android.emvkernel.data.beans.EmvResultInfo;
+import com.vfi.android.emvkernel.data.beans.OnlineInfo;
+import com.vfi.android.emvkernel.data.beans.OnlineResult;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TSI;
 import com.vfi.android.emvkernel.data.beans.tagbeans.TVR;
 import com.vfi.android.emvkernel.data.consts.EMVResultCode;
@@ -20,6 +23,7 @@ import com.vfi.android.emvkernel.utils.SecurityUtil;
 import com.vfi.android.libtools.consts.TAGS;
 import com.vfi.android.libtools.utils.LogUtil;
 import com.vfi.android.libtools.utils.StringUtil;
+import com.vfi.android.libtools.utils.TLVUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,8 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         LogUtil.d(TAG, "TerminalActionAnalysisState msgType=" + message.getMessageType());
         if (message instanceof Msg_StartTerminalActionAnalysis) {
             processStartTerminalActionAnalysisMessage(message);
+        } else if (message instanceof Msg_InputOnlineResult) {
+            processInputOnlineResultMessage((Msg_InputOnlineResult) message);
         }
     }
 
@@ -150,8 +156,80 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         makeCardRiskManagementWasPerform();
     }
 
+    private void processInputOnlineResultMessage(Msg_InputOnlineResult message) {
+        OnlineResult onlineResult = message.getOnlineResult();
+        if (onlineResult == null) {
+            LogUtil.d(TAG, "No Online Result found.");
+            doFinishProcess(false, EMVResultCode.ERR_TAA_ONLINE_RESULT_DATA_WRONG);
+            return;
+        }
+
+        boolean isRequireCDA = false;
+        // TODO  not sure if should do like this
+        if (getEmvTransData().isDoCDAInSecondGAC() && !getEmvTransData().isDoCDAInFirstGAC()) {
+            isRequireCDA = true;
+        }
+        LogUtil.d(TAG, "isRequireCDA=" + isRequireCDA);
+
+        LogUtil.d(TAG, "isUnableToGoOnline=" + onlineResult.isUnableToGoOnline());
+        if (onlineResult.isUnableToGoOnline()) {
+            String tacDefault = getTerminalActionCode(ParamTag.TAC_DEFAULT);
+            String iacDefault = getIssuerActionCode(EMVTag.tag9F0D);
+            LogUtil.d(TAG, "iacDefault=[" + iacDefault + "]");
+            LogUtil.d(TAG, "tacDefault=[" + tacDefault + "]");
+
+            TVR tacDefaultVal = new TVR(tacDefault);
+            TVR iacDefaultVal = new TVR(iacDefault);
+            if (isExistTvrFlagTrue(tacDefaultVal, iacDefaultVal)) {
+                performAAC(false, isRequireCDA);
+            } else {
+                performTC(false, isRequireCDA);
+            }
+        } else {
+            Map<String, String> map = TLVUtil.toTlvMap(onlineResult.getRespField55());
+            if (map.containsKey(EMVTag.tag91)) {
+                /**
+                 * Book3, Page 120
+                 * The ARQC may be sent in the authorisation request message.17 The
+                 * authorisation response message from the issuer may contain the Issuer
+                 * Authentication Data (tag '91'). If the Issuer Authentication Data is received in
+                 * the authorisation response message and the Application Interchange Profile
+                 * indicates that the ICC supports issuer authentication, the Issuer Authentication
+                 * Data shall be sent to the ICC in the EXTERNAL AUTHENTICATE command. If
+                 * the ICC responds with SW1 SW2 other than '9000', the terminal shall set the
+                 * ‘Issuer authentication failed’ bit in the TVR to 1.
+                 */
+                String issuerAuthData = map.get(EMVTag.tag91);
+                LogUtil.d(TAG, "issuerAuthData=[" + issuerAuthData + "]");
+
+                if (getEmvTransData().getAIP().isSupportIssuerAuthentication()) {
+
+                    getEmvTransData().getTsi().markFlag(TSI.FLAG_ISSUER_AUTHENTICATION_WAS_PERFORMED, true);
+                }
+            }
+
+            if (map.containsKey(EMVTag.tag71)) {
+                String issuerTemplate71 = map.get(EMVTag.tag71);
+                LogUtil.d(TAG, "Found issuer script 71=[" + issuerTemplate71 + "]");
+
+            }
+
+            if ("00".equals(onlineResult.getRespCode())) {
+                performTC(false, isRequireCDA);
+            } else {
+                performAAC(false, isRequireCDA);
+            }
+
+            if (map.containsKey(EMVTag.tag72)) {
+                String issuerTemplate72 = map.get(EMVTag.tag72);
+                LogUtil.d(TAG, "Found issuer script 72=[" + issuerTemplate72 + "]");
+
+            }
+        }
+    }
+
     private void performAAC(boolean isFirstGAC, boolean isRequireCDA) {
-        LogUtil.d(TAG, "TAA result AAC.");
+        LogUtil.d(TAG, "TAA result AAC. isFirstGAC=" + isFirstGAC + " isRequireCDA=" + isRequireCDA);
         // rejected transaction offline
 
         if (isRequireCDA) {
@@ -174,9 +252,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(false, ret);
         response.saveTags(getEmvTransData().getTagMap());
 
-        setErrorCode(EMVResultCode.ERR_TAA_RESULT_AAC);
-        getEmvHandler().onTransactionResult(new EmvResultInfo(true, getEmvTransData().getErrorCode()));
-        finishEmv();
+        doFinishProcess(false, EMVResultCode.ERR_TAA_RESULT_AAC);
     }
 
     private void performARQC(boolean isFirstGAC, boolean isRequireCDA) {
@@ -217,14 +293,16 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                 }
             }
 
-            return;
+            OnlineInfo onlineInfo = new OnlineInfo();
+            getEmvHandler().onRequestOnlineProcess(onlineInfo);
         } else {
-
+            LogUtil.d(TAG, "Execute GAC command failed. status=[" + response.getStatus() + "]");
+            doFinishProcess(false, EMVResultCode.ERR_TAA_EXECUTE_GAC_FAILED);
         }
     }
 
     private void performTC(boolean isFirstGAC, boolean isRequireCDA) {
-        LogUtil.d(TAG, "TAA result TC.");
+        LogUtil.d(TAG, "TAA result TC. isFirstGAC=" + isFirstGAC + " isRequireCDA=" + isRequireCDA);
         if (isFirstGAC) {
             /**
              * Book2, Page71
@@ -271,6 +349,9 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                     doFinishProcess(false, EMVResultCode.ERR_TAA_CDA_FAILED);
                 }
             }
+
+            LogUtil.d(TAG, "TAA Offline approval");
+            doFinishProcess(true, EMVResultCode.ERR_TAA_RESULT_TC);
         } else {
             LogUtil.d(TAG, "Do GenerateAC command failed, error status=[" + response.getStatus() + "]");
             doFinishProcess(false, EMVResultCode.ERR_TAA_EXECUTE_GAC_FAILED);

@@ -61,10 +61,10 @@ public class AIP {
         return isOnDeviceCardHolderVerificationNotSupport;
     }
 
-    public boolean isSupportGenerateAC() {
-        boolean isSupportGenerateAC = (aip[0] & 0x04) > 0;
-        LogUtil.d(TAG, "CARD SupportGenerateACCommand[" + isSupportGenerateAC + "]");
-        return isSupportGenerateAC;
+    public boolean isSupportIssuerAuthentication() {
+        boolean isSupportIssuerAuthentication = (aip[0] & 0x04) > 0;
+        LogUtil.d(TAG, "CARD SupportIssuerAuthentication[" + isSupportIssuerAuthentication + "]");
+        return isSupportIssuerAuthentication;
     }
 
     public boolean isSupportTerminalRiskManagement() {

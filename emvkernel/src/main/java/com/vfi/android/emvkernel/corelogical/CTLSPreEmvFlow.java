@@ -5,6 +5,7 @@ import com.vfi.android.emvkernel.corelogical.states.base.BaseEmvFlow;
 import com.vfi.android.emvkernel.corelogical.states.base.EmvContext;
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
+import com.vfi.android.emvkernel.data.beans.OnlineResult;
 import com.vfi.android.emvkernel.interfaces.IEmvComm;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
@@ -49,6 +50,11 @@ public class CTLSPreEmvFlow extends BaseEmvFlow implements IEmvOperation {
 
     @Override
     public void importPin(int option, byte[] pin) {
+
+    }
+
+    @Override
+    public void inputOnlineResult(OnlineResult result) {
 
     }
 }

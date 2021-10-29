@@ -343,4 +343,39 @@ public class EMVTag {
      * Terminal b — '98' 20
      */
     public final static String tag98 = "98";
+
+    /**
+     * Issuer Script Template 1
+     * Contains proprietary issuer data for transmission to the ICC before the second GENERATE AC command
+     * Issuer b — '71' var.
+     */
+    public final static String tag71 = "71";
+
+    /**
+     * Issuer Script Template 2
+     * Contains proprietary issuer data for transmission to the ICC after the second GENERATE AC command
+     * Issuer b — '72' var
+     */
+    public final static String tag72 = "72";
+
+    /**
+     * Issuer Script Command
+     * Contains a command for transmission to the ICC
+     * Issuer b '71' or '72' '86' var. up to 261
+     */
+    public final static String tag86 = "86";
+
+    /**
+     * Issuer Script Identifier
+     * Identification of the Issuer Script
+     * Issuer b '71' or '72' '9F18' 4
+     */
+    public final static String tag9F18 = "9F18";
+
+    /**
+     * Issuer Authentication Data
+     * Data sent to the ICC for online issuer authentication
+     * Issuer b — '91' 8-16
+     */
+    public final static String tag91 = "91";
 }

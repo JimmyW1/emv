@@ -2,6 +2,7 @@ package com.vfi.android.emvkernel.corelogical;
 
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderConfirm;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_CardHolderSelectFinished;
+import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputOnlineResult;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputPinFinished;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartEmv;
 import com.vfi.android.emvkernel.corelogical.states.base.AbstractEmvState;
@@ -21,6 +22,7 @@ import com.vfi.android.emvkernel.corelogical.states.contact.TerminalRiskManageme
 import com.vfi.android.emvkernel.data.beans.AppInfo;
 import com.vfi.android.emvkernel.data.beans.EmvApplication;
 import com.vfi.android.emvkernel.data.beans.EmvParams;
+import com.vfi.android.emvkernel.data.beans.OnlineResult;
 import com.vfi.android.emvkernel.interfaces.IEmvHandler;
 import com.vfi.android.emvkernel.interfaces.IEmvOperation;
 import com.vfi.android.libtools.utils.LogUtil;
@@ -115,5 +117,10 @@ public class ContactEmvFlow extends BaseEmvFlow implements IEmvOperation {
     @Override
     public void importPin(int option, byte[] pin) {
         sendMessage(new Msg_InputPinFinished(option == 0, pin));
+    }
+
+    @Override
+    public void inputOnlineResult(OnlineResult result) {
+        sendMessage(new Msg_InputOnlineResult(result));
     }
 }

@@ -22,7 +22,12 @@ class EmvHandler : IEmvHandler {
     }
 
     override fun onRequestOnlineProcess(onlineInfo: OnlineInfo?) {
-        TODO("Not yet implemented")
+        var onlineResult = OnlineResult()
+        onlineResult.isUnableToGoOnline = false;
+        onlineResult.authCode = "";
+        onlineResult.respCode = "00";
+        onlineResult.respField55 = "";
+        emvManager.inputOnlineResult(onlineResult);
     }
 
     override fun onSelectApplication(appList: MutableList<AppInfo>?) {
