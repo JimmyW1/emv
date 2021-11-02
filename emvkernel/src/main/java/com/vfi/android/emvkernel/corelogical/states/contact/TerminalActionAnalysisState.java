@@ -1,7 +1,11 @@
 package com.vfi.android.emvkernel.corelogical.states.contact;
 
+import com.vfi.android.emvkernel.corelogical.apdu.ExternalAuthenticateCmd;
+import com.vfi.android.emvkernel.corelogical.apdu.ExternalAuthenticateResponse;
 import com.vfi.android.emvkernel.corelogical.apdu.GenerateApplicationCryptogramCmd;
 import com.vfi.android.emvkernel.corelogical.apdu.GenerateApplicationCryptogramResponse;
+import com.vfi.android.emvkernel.corelogical.apdu.ScriptCmd;
+import com.vfi.android.emvkernel.corelogical.apdu.ScriptResponse;
 import com.vfi.android.emvkernel.corelogical.msgs.appmsgs.Msg_InputOnlineResult;
 import com.vfi.android.emvkernel.corelogical.msgs.base.Message;
 import com.vfi.android.emvkernel.corelogical.msgs.emvmsgs.Msg_StartTerminalActionAnalysis;
@@ -124,7 +128,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
             if (isExistTvrFlagTrue(tacDefaultVal, iacDefaultVal)) {
                 performAAC(true, isRequireCDA);
             } else {
-                performTC(true, isRequireCDA);
+                performTC(true, isRequireCDA, false);
             }
         } else { // online terminal
             /**
@@ -149,7 +153,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
             if (isExistTvrFlagTrue(tacOnlineVal, iacOnlineVal)) {
                 performARQC(true, isRequireCDA);
             } else {
-                performTC(true, isRequireCDA);
+                performTC(true, isRequireCDA, false);
             }
         }
 
@@ -183,7 +187,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
             if (isExistTvrFlagTrue(tacDefaultVal, iacDefaultVal)) {
                 performAAC(false, isRequireCDA);
             } else {
-                performTC(false, isRequireCDA);
+                performTC(false, isRequireCDA, true);
             }
         } else {
             Map<String, String> map = TLVUtil.toTlvMap(onlineResult.getRespField55());
@@ -203,6 +207,12 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                 LogUtil.d(TAG, "issuerAuthData=[" + issuerAuthData + "]");
 
                 if (getEmvTransData().getAIP().isSupportIssuerAuthentication()) {
+                    byte[] retData = executeApduCmd(new ExternalAuthenticateCmd(issuerAuthData));
+                    ExternalAuthenticateResponse response = new ExternalAuthenticateResponse(retData);
+                    if (!response.isSuccess()) {
+                        getEmvTransData().getTvr().markFlag(TVR.FLAG_ISSUER_AUTHENTICATION_FAILED, true);
+                    }
+
 
                     getEmvTransData().getTsi().markFlag(TSI.FLAG_ISSUER_AUTHENTICATION_WAS_PERFORMED, true);
                 }
@@ -212,10 +222,24 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                 String issuerTemplate71 = map.get(EMVTag.tag71);
                 LogUtil.d(TAG, "Found issuer script 71=[" + issuerTemplate71 + "]");
 
+                List<String> scriptList = TLVUtil.getTagList(issuerTemplate71, EMVTag.tag86);
+                for (String script : scriptList) {
+                    byte[] retData = executeApduCmd(new ScriptCmd(script));
+                    ScriptResponse response = new ScriptResponse(retData);
+                    if (!response.isSuccess()) {
+                        LogUtil.d(TAG, "Script[" + script + "] execute failed.");
+                        getEmvTransData().getTvr().markFlag(TVR.FLAG_SCRIPT_PROCESSING_FAILED_BEFORE_FINAL_GAC, true);
+                        break;
+                    }
+                }
+
+                if (scriptList.size() > 0) {
+                    getEmvTransData().getTsi().markFlag(TSI.FLAG_SCRIPT_PROCESSING_WAS_PERFORMED, true);
+                }
             }
 
             if ("00".equals(onlineResult.getRespCode())) {
-                performTC(false, isRequireCDA);
+                performTC(false, isRequireCDA, false);
             } else {
                 performAAC(false, isRequireCDA);
             }
@@ -224,6 +248,20 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                 String issuerTemplate72 = map.get(EMVTag.tag72);
                 LogUtil.d(TAG, "Found issuer script 72=[" + issuerTemplate72 + "]");
 
+                List<String> scriptList = TLVUtil.getTagList(issuerTemplate72, EMVTag.tag86);
+                for (String script : scriptList) {
+                    byte[] retData = executeApduCmd(new ScriptCmd(script));
+                    ScriptResponse response = new ScriptResponse(retData);
+                    if (!response.isSuccess()) {
+                        LogUtil.d(TAG, "Script[" + script + "] execute failed.");
+                        getEmvTransData().getTvr().markFlag(TVR.FLAG_SCRIPT_PROCESSING_FAILED_AFTER_FINAL_GAC, true);
+                        break;
+                    }
+                }
+
+                if (scriptList.size() > 0) {
+                    getEmvTransData().getTsi().markFlag(TSI.FLAG_SCRIPT_PROCESSING_WAS_PERFORMED, true);
+                }
             }
         }
     }
@@ -248,7 +286,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
          * When requesting an AAC, the terminal shall request it without a CDA
          * signature.
          */
-        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_AAC, false, getGenerateACCommandData(true)));
+        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_AAC, false, getGenerateACCommandData(isFirstGAC)));
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(false, ret);
         response.saveTags(getEmvTransData().getTagMap());
 
@@ -301,7 +339,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
         }
     }
 
-    private void performTC(boolean isFirstGAC, boolean isRequireCDA) {
+    private void performTC(boolean isFirstGAC, boolean isRequireCDA, boolean isUnableToGoOnline) {
         LogUtil.d(TAG, "TAA result TC. isFirstGAC=" + isFirstGAC + " isRequireCDA=" + isRequireCDA);
         if (isFirstGAC) {
             /**
@@ -330,7 +368,7 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
             getEmvTransData().getTvr().markFlag(TVR.FLAG_OFFLINE_DATA_AUTH_WAS_NOT_PERFORMED, false);
         }
         // transaction offline approval
-        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_TC, isRequireCDA, getGenerateACCommandData(true)));
+        byte[] ret = executeApduCmd(new GenerateApplicationCryptogramCmd(GenerateApplicationCryptogramCmd.TYPE_TC, isRequireCDA, getGenerateACCommandData(isFirstGAC)));
         GenerateApplicationCryptogramResponse response = new GenerateApplicationCryptogramResponse(isRequireCDA, ret);
         response.saveTags(getEmvTransData().getTagMap());
         if (response.isSuccess()) {
@@ -350,8 +388,13 @@ public class TerminalActionAnalysisState extends AbstractEmvState {
                 }
             }
 
-            LogUtil.d(TAG, "TAA Offline approval");
-            doFinishProcess(true, EMVResultCode.ERR_TAA_RESULT_TC);
+            if (isFirstGAC || isUnableToGoOnline) {
+                LogUtil.d(TAG, "TAA Offline approval");
+                doFinishProcess(true, EMVResultCode.SUCCESS_TAA_RESULT_TC);
+            } else {
+                LogUtil.d(TAG, "Host approval and card approval");
+                doFinishProcess(true, EMVResultCode.SUCCESS);
+            }
         } else {
             LogUtil.d(TAG, "Do GenerateAC command failed, error status=[" + response.getStatus() + "]");
             doFinishProcess(false, EMVResultCode.ERR_TAA_EXECUTE_GAC_FAILED);
